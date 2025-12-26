@@ -35,8 +35,6 @@ public:
 
 		nLength = *(DWORD*)(pData + i);
 		i += 4;
-		sCmd = *(WORD*)(pData + i);
-		i += 2;
 		// 包没有完全接收到，就返回，此时解析失败
 		if (nLength + i > nSize)
 		{
@@ -54,9 +52,9 @@ public:
 		sSum = *(WORD*)(pData + i);
 		i += 2;
 		WORD sum = 0;
-		for (size_t j = 0;i < strData.size();j++)
+		for (size_t j = 0;j < strData.size();j++)
 		{
-			sum += BYTE(strData[i]) & 0xFF;
+			sum += BYTE(strData[j]) & 0xFF;
 		}
 		if (sum == sSum)
 		{
