@@ -1,15 +1,31 @@
 ﻿  RemoteCtrl.cpp
-D:\c++\project\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\ServerSocket.h(144,60): warning C4267: “参数”: 从“size_t”转换到“int”，可能丢失数据
+D:\c++\project\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\ServerSocket.h(15,19): warning C4267: “=”: 从“size_t”转换到“DWORD”，可能丢失数据
+  (编译源文件“/RemoteCtrl.cpp”)
+  
+D:\c++\project\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\ServerSocket.h(185,60): warning C4267: “参数”: 从“size_t”转换到“int”，可能丢失数据
+  (编译源文件“/RemoteCtrl.cpp”)
+  
+D:\c++\project\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\ServerSocket.h(206,32): warning C4267: “参数”: 从“size_t”转换到“int”，可能丢失数据
+  (编译源文件“/RemoteCtrl.cpp”)
+  
+D:\c++\project\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\RemoteCtrl.cpp(25,23): warning C4305: “参数”: 从“int”到“_Elem”截断
+D:\c++\project\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\RemoteCtrl.cpp(25,23): warning C4305:         with
+D:\c++\project\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\RemoteCtrl.cpp(25,23): warning C4305:         [
+D:\c++\project\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\RemoteCtrl.cpp(25,23): warning C4305:             _Elem=char
+D:\c++\project\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\RemoteCtrl.cpp(25,23): warning C4305:         ]
+  (编译源文件“/RemoteCtrl.cpp”)
+  
+D:\c++\project\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\RemoteCtrl.cpp(25,23): warning C4309: “参数”: 截断常量值
+  (编译源文件“/RemoteCtrl.cpp”)
+  
   ServerSocket.cpp
-  (编译源文件“/RemoteCtrl.cpp”)
-  
-D:\c++\project\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\ServerSocket.h(165,32): warning C4267: “参数”: 从“size_t”转换到“int”，可能丢失数据
-  (编译源文件“/RemoteCtrl.cpp”)
-  
-D:\c++\project\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\ServerSocket.h(144,60): warning C4267: “参数”: 从“size_t”转换到“int”，可能丢失数据
+D:\c++\project\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\ServerSocket.h(15,19): warning C4267: “=”: 从“size_t”转换到“DWORD”，可能丢失数据
   (编译源文件“/ServerSocket.cpp”)
   
-D:\c++\project\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\ServerSocket.h(165,32): warning C4267: “参数”: 从“size_t”转换到“int”，可能丢失数据
+D:\c++\project\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\ServerSocket.h(185,60): warning C4267: “参数”: 从“size_t”转换到“int”，可能丢失数据
+  (编译源文件“/ServerSocket.cpp”)
+  
+D:\c++\project\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\ServerSocket.h(206,32): warning C4267: “参数”: 从“size_t”转换到“int”，可能丢失数据
   (编译源文件“/ServerSocket.cpp”)
   
   正在生成代码...
