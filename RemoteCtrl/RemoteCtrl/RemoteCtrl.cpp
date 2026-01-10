@@ -4,7 +4,9 @@
 #include "RemoteCtrl.h"
 #include "ServerSocket.h"
 #include <direct.h>
-
+#include <stdio.h>
+#include <io.h>
+#include <list>
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
@@ -45,6 +47,69 @@ int MakeDriverInfo()
     CPacket pack(1, (BYTE*)result.c_str(), result.size());  //打包
     Dump((BYTE*)pack.Data(), pack.Size());
     //CServerSocket::getInstance()->Send(CPacket(1,(BYTE*)result.c_str(),result.size()));
+    return 0;
+}
+
+typedef struct file_info{
+    file_info()
+    {
+        IsInvalid = FALSE;
+        IsDirectory = -1;
+        HasNext = TRUE;
+        memset(szFileName, 0, sizeof(szFileName));
+    }
+    // 是否有效
+    BOOL IsInvalid;
+    // 是否为目录，0 否，1 是
+    BOOL IsDirectory;
+    // 是否还有后续 0 没有 1 有
+    BOOL HasNext;
+    // 文件名
+    char szFileName[256];
+}FILEINFO, * PFILEINFO;
+
+int MakeDirectoryInfo()
+{
+    std::string strPath;
+    std::list<FILEINFO> lstFileInfos;
+    if (CServerSocket::getInstance()->GetFilePath(strPath) == false)
+    {
+        OutputDebugString(_T("当前的命令，不是获取文件列表，命令获取错误"));
+        return -1;
+    }
+
+    if (_chdir(strPath.c_str()) != 0)
+    {
+        FILEINFO finfo;
+        finfo.IsInvalid = TRUE;
+        finfo.IsDirectory = TRUE;
+        finfo.HasNext = FALSE;
+        memcpy(finfo.szFileName, strPath.c_str(), strPath.size());
+        //lstFileInfos.push_back(finfo);
+        CPacket pack(2, (BYTE*) & finfo, sizeof(finfo));
+        CServerSocket::getInstance()->Send(pack);
+        OutputDebugString(_T("没有权限访问目录!!"));
+        return -2;
+    }
+    _finddata_t fdata;
+    int hfind = 0;
+    if ((hfind = _findfirst("*", &fdata)) == -1)
+    {
+        OutputDebugString(_T("没有找到任何文件!!"));
+        return -3;
+    }
+    do {
+        FILEINFO finfo;
+        finfo.IsDirectory = (fdata.attrib & _A_SUBDIR) != 0;
+        memcpy(finfo.szFileName, fdata.name, strlen(fdata.name));
+        //lstFileInfos.push_back(finfo);
+        CPacket pack(2, (BYTE*)&finfo, sizeof(finfo));
+        CServerSocket::getInstance()->Send(pack);
+
+    } while (!_findnext(hfind, &fdata));
+    // 发送信息到控制端
+    FILEINFO finfo;
+    finfo.HasNext = FALSE;
     return 0;
 }
 
@@ -97,7 +162,13 @@ int main()
             // 查看磁盘分区
             case 1:
                 MakeDriverInfo();
+                break;
+            // 查看指定目录下的文件
+            case 2:
+                MakeDirectoryInfo();
+                break;
             }
+
             MakeDriverInfo();
 
         }
