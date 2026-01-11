@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <io.h>
 #include <list>
+#include <atlimage.h>
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
@@ -263,6 +264,53 @@ int MouseEvent()
     return 0;
 }
 
+int SendScreen()
+{
+    CImage screen;  //GDI
+    HDC hScreen = ::GetDC(NULL);
+    int nBitPerpixel = GetDeviceCaps(hScreen, BITSPIXEL);   // 8bit*4 ARGB
+    int nWidth = GetDeviceCaps(hScreen, HORZRES);
+    int nHeight = GetDeviceCaps(hScreen, VERTRES);
+    screen.Create(nWidth, nHeight, nBitPerpixel);
+    BitBlt(screen.GetDC(), 0, 0, 1920, 1020, hScreen, 0, 0, SRCCOPY);
+    ReleaseDC(NULL, hScreen);
+    HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, 0);
+    if (hMem == NULL)
+        return -1;
+    IStream* pStream = NULL;
+    HRESULT ret = CreateStreamOnHGlobal(hMem, TRUE, &pStream);
+    if (ret == S_OK)
+    {
+        screen.Save(pStream, Gdiplus::ImageFormatPNG);
+        LARGE_INTEGER bg = { 0 };
+        pStream->Seek(bg, STREAM_SEEK_SET, NULL);
+        PBYTE pData = (PBYTE)GlobalLock(hMem);
+        SIZE_T nSize = GlobalSize(hMem);
+        CPacket pack(6, pData, nSize);
+        CServerSocket::getInstance()->Send(pack);
+        GlobalUnlock(hMem); 
+        
+    }
+
+    /*
+    TRACE("jpg %d\r\n", GetTickCount64() - tick);
+    for (int i = 0;i < 10;i++)
+    {
+        DWORD tick = GetTickCount64();
+        screen.Save(_T("test2020.png"), Gdiplus::ImageFormatPNG);
+        TRACE("png %d\r\n", GetTickCount64() - tick);
+        tick = GetTickCount();
+        screen.Save(_T("test2020.jpg"), Gdiplus::ImageFormatJPEG);
+        TRACE("jpg %d\r\n", GetTickCount64() - tick);
+    }*/
+    
+    pStream->Release();
+    GlobalFree(hMem);
+    screen.ReleaseDC();
+
+    return 0;
+}
+
 int main()
 {
     int nRetCode = 0;
@@ -306,7 +354,7 @@ int main()
             //    // TODO:
             //}
             //全局的静态变量
-            int nCmd = 1;
+            int nCmd = 6;
             switch (nCmd)
             {
             // 查看磁盘分区
@@ -328,6 +376,10 @@ int main()
             // 鼠标操作
             case 5:
                 MouseEvent();
+                break;
+            // 发送屏幕内容 ==> 发送屏幕的截图
+            case 6:
+                SendScreen();
                 break;
             }
 
