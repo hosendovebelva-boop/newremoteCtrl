@@ -8,6 +8,7 @@
 #include <io.h>
 #include <list>
 #include <atlimage.h>
+#include "LockInfoDialog.h"
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
@@ -311,15 +312,75 @@ int SendScreen()
     return 0;
 }
 
+CLockInfoDialog dlg;
+unsigned threadid = 0;
+
+unsigned __stdcall threadLockDlg(void* arg)
+{
+    TRACE("%s(%d):%d\r\n", __FUNCTION__, __LINE__, GetCurrentThreadId());
+    dlg.Create(IDD_DIALOG_INFO, NULL);
+    dlg.ShowWindow(SW_SHOW);
+    CRect rect;
+    rect.left = 0;
+    rect.top = 0;
+    rect.right = GetSystemMetrics(SM_CXFULLSCREEN);
+    rect.bottom = GetSystemMetrics(SM_CYFULLSCREEN);
+    rect.bottom *= 1.05;
+    dlg.MoveWindow(rect);
+    // 窗口置顶
+    dlg.SetWindowPos(&dlg.wndTopMost, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
+    // 限制鼠标功能
+    ShowCursor(false);
+    // 隐藏任务栏
+    ::ShowWindow(::FindWindow(_T("Shell_TaryWnd"), NULL), SW_HIDE);
+    // 限制鼠标活动范围
+    //dlg.GetWindowRect(rect);
+    rect.left = 0;
+    rect.top = 0;
+    rect.right = 1;
+    rect.bottom = 1;
+    ClipCursor(rect);
+    MSG msg;
+    while (GetMessage(&msg, NULL, 0, 0))
+    {
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
+        if (msg.message == WM_KEYDOWN)
+        {
+            TRACE("msg:%08X lparam:%08X\r\n", msg.message, msg.wParam, msg.lParam);
+            if (msg.wParam == 0x41)
+                break;
+        }
+    }
+    ShowCursor(true);
+    ::ShowWindow(::FindWindow(_T("Shell_TaryWnd"), NULL), SW_SHOW);
+    dlg.DestroyWindow();
+
+    _endthreadex(0);
+    return 0;
+}
+
 int LockMachine()
 {
+    if ((dlg.m_hWnd == NULL) || (dlg.m_hWnd == INVALID_HANDLE_VALUE))
+    {
+        //_beginthread(threadLockDlg, 0, NULL);
+        _beginthreadex(NULL, 0, threadLockDlg, NULL, 0, &threadid);
+        TRACE("threadid=%d\r\n", threadid);
+    }
 
+    CPacket pack(7, NULL, 0);
+    CServerSocket::getInstance()->Send(pack);
     return 0;
 }
 
 int UnlockMachine()
 {
-
+    //dlg.SendMessage(WM_KEYDOWN, 0x41, 0x001E001);
+    //::SendMessage(dlg.m_hWnd, WM_KEYDOWN, 0x41, 0x01E0001);
+    PostThreadMessage(threadid, WM_KEYDOWN, 0x41, 0);
+    CPacket pack(7, NULL, 0);
+    CServerSocket::getInstance()->Send(pack);
     return 0;
 }
 
@@ -366,7 +427,9 @@ int main()
             //    // TODO:
             //}
             //全局的静态变量
-            int nCmd = 6;
+
+            // 全局静态变量
+            int nCmd = 7;
             switch (nCmd)
             {
             // 查看磁盘分区
@@ -395,14 +458,21 @@ int main()
                 break;
             case 7:
                 LockMachine();
+                Sleep(50);
+                LockMachine();
                 break;
             case 8:
                 UnlockMachine();
                 break;
             }
+            Sleep(5000);
+            UnlockMachine();
+            TRACE("m_hWnd = %08X\r\n", dlg.m_hWnd);
 
-            MakeDriverInfo();
-
+            while ((dlg.m_hWnd != NULL) && (dlg.m_hWnd != INVALID_HANDLE_VALUE))
+            {
+                Sleep(100);
+            }
         }
     }
     else
