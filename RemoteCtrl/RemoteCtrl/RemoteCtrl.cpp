@@ -332,7 +332,7 @@ unsigned __stdcall threadLockDlg(void* arg)
     // 限制鼠标功能
     ShowCursor(false);
     // 隐藏任务栏
-    ::ShowWindow(::FindWindow(_T("Shell_TaryWnd"), NULL), SW_HIDE);
+    ::ShowWindow(::FindWindow(_T("Shell_TrayWnd"), NULL), SW_HIDE);
     // 限制鼠标活动范围
     //dlg.GetWindowRect(rect);
     rect.left = 0;
@@ -353,7 +353,7 @@ unsigned __stdcall threadLockDlg(void* arg)
         }
     }
     ShowCursor(true);
-    ::ShowWindow(::FindWindow(_T("Shell_TaryWnd"), NULL), SW_SHOW);
+    ::ShowWindow(::FindWindow(_T("Shell_TrayWnd"), NULL), SW_SHOW);
     dlg.DestroyWindow();
 
     _endthreadex(0);
