@@ -47,8 +47,11 @@ int MakeDriverInfo()
         }
     }
     CPacket pack(1, (BYTE*)result.c_str(), result.size());  //打包
+    // FFFE070000000100432C44B300
     Dump((BYTE*)pack.Data(), pack.Size());
+    // 发现问题：忘记Send了
     //CServerSocket::getInstance()->Send(CPacket(1,(BYTE*)result.c_str(),result.size()));
+    CServerSocket::getInstance()->Send(pack);
     return 0;
 }
 
@@ -458,40 +461,39 @@ int main()
             // 套接字结构体初始化
             CServerSocket* pserver = CServerSocket::getInstance();
             int count = 0;
+            if (pserver->InitSocket() == false)
+            {
+                MessageBox(NULL, _T("网络初始化异常，未能成功初始化，请检查网络状态！"), _T("网络初始化失败"), MB_OK | MB_ICONERROR);
+                exit(0);
+            }
             while (CServerSocket::getInstance() != NULL)
             {
-                if (pserver->InitSocket() == false)
+                if (pserver->AcceptClient() == false)
                 {
-                    MessageBox(NULL, _T("网络初始化异常，未能成功初始化，请检查网络状态！"), _T("网络初始化失败"), MB_OK | MB_ICONERROR);
-                    exit(0);
+                    if (count >= 3)
+                    {
+                        MessageBox(NULL, _T("多次无法正常接入用户，结束程序！"), _T("接入用户失败"), MB_OK | MB_ICONERROR);
+                        exit(0);
+                    }
+                    MessageBox(NULL, _T("无法正常接入用户，自动重试"), _T("接入用户失败"), MB_OK | MB_ICONERROR);
+                    count++;
                 }
-                while (CServerSocket::getInstance() != NULL)
+                TRACE("AcceptClient return true\r\n");
+                int ret = pserver->DealCommand();
+                TRACE("DealCommand ret %d\r\n", ret);
+                if (ret > 0)
                 {
-                    if (pserver->AcceptClient() == false)
+                    ret = ExcuteCommand(pserver->GetPacket().sCmd);
+                    if (ret != 0)
                     {
-                        if (count >= 3)
-                        {
-                            MessageBox(NULL, _T("多次无法正常接入用户，结束程序！"), _T("接入用户失败"), MB_OK | MB_ICONERROR);
-                            exit(0);
-                        }
-                        MessageBox(NULL, _T("无法正常接入用户，自动重试"), _T("接入用户失败"), MB_OK | MB_ICONERROR);
-                        count++;
+                        TRACE("执行命令失败：%d ret=%d\r\n", pserver->GetPacket().sCmd, ret);
                     }
-                    TRACE("AcceptClient return true\r\n");
-                    int ret = pserver->DealCommand();
-                    TRACE("DealCommand ret %d\r\n", ret);
-                    if (ret > 0)
-                    {
-                        ret = ExcuteCommand(pserver->GetPacket().sCmd);
-                        if (ret != 0)
-                        {
-                            TRACE("执行命令失败：%d ret=%d\r\n", pserver->GetPacket().sCmd, ret);
-                        }
-                        pserver->CloseClient();
-                        TRACE("Command has done!\r\n");
-                    }
+                    pserver->CloseClient();
+                    TRACE("Command has done!\r\n");
                 }
             }
+                
+            
         }
     }
     else
