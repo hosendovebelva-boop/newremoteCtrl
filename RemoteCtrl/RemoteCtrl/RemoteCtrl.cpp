@@ -55,23 +55,6 @@ int MakeDriverInfo()
     return 0;
 }
 
-typedef struct file_info{
-    file_info()
-    {
-        IsInvalid = FALSE;
-        IsDirectory = -1;
-        HasNext = TRUE;
-        memset(szFileName, 0, sizeof(szFileName));
-    }
-    // 是否有效
-    BOOL IsInvalid;
-    // 是否为目录，0 否，1 是
-    BOOL IsDirectory;
-    // 是否还有后续 0 没有 1 有
-    BOOL HasNext;
-    // 文件名
-    char szFileName[256];
-}FILEINFO, * PFILEINFO;
 
 int MakeDirectoryInfo()
 {
@@ -90,17 +73,24 @@ int MakeDirectoryInfo()
         finfo.IsDirectory = TRUE;
         finfo.HasNext = FALSE;
         memcpy(finfo.szFileName, strPath.c_str(), strPath.size());
-        //lstFileInfos.push_back(finfo);
+        TRACE("%s \r\n", finfo.szFileName);
         CPacket pack(2, (BYTE*) & finfo, sizeof(finfo));
         CServerSocket::getInstance()->Send(pack);
         OutputDebugString(_T("没有权限访问目录!!"));
         return -2;
     }
     _finddata_t fdata;
-    int hfind = 0;
+    // [原代码] int hfind = 0;
+    // [问题] 64位系统 _findfirst 返回 intptr_t(64位)，用 int(32位) 存储会截断句柄值
+    // [新代码] 使用 intptr_t 确保在 64 位系统正确存储句柄
+    intptr_t hfind = 0;
     if ((hfind = _findfirst("*", &fdata)) == -1)
     {
         OutputDebugString(_T("没有找到任何文件!!"));
+        FILEINFO finfo;
+        finfo.HasNext = FALSE;
+        CPacket pack(2, (BYTE*)&finfo, sizeof(finfo));
+        CServerSocket::getInstance()->Send(pack);
         return -3;
     }
     do {
@@ -108,6 +98,7 @@ int MakeDirectoryInfo()
         finfo.IsDirectory = (fdata.attrib & _A_SUBDIR) != 0;
         memcpy(finfo.szFileName, fdata.name, strlen(fdata.name));
         //lstFileInfos.push_back(finfo);
+        TRACE("%s\r\n",finfo.szFileName);
         CPacket pack(2, (BYTE*)&finfo, sizeof(finfo));
         CServerSocket::getInstance()->Send(pack);
 
@@ -115,6 +106,8 @@ int MakeDirectoryInfo()
     // 发送信息到控制端
     FILEINFO finfo;
     finfo.HasNext = FALSE;
+    CPacket pack(2, (BYTE*)&finfo, sizeof(finfo));
+    CServerSocket::getInstance()->Send(pack);
     return 0;
 }
 
@@ -328,10 +321,10 @@ unsigned __stdcall threadLockDlg(void* arg)
     rect.top = 0;
     rect.right = GetSystemMetrics(SM_CXFULLSCREEN);
     rect.bottom = GetSystemMetrics(SM_CYFULLSCREEN);
-    rect.bottom *= 1.05;
+    rect.bottom = LONG(rect.bottom * 1.05);
     dlg.MoveWindow(rect);
     // 窗口置顶
-    dlg.SetWindowPos(&dlg.wndTopMost, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
+    //dlg.SetWindowPos(&dlg.wndTopMost, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
     // 限制鼠标功能
     ShowCursor(false);
     // 隐藏任务栏
