@@ -98,3 +98,23 @@ This is a Windows remote control application with client-server architecture usi
 - Code comments are primarily in Chinese (Simplified)
 - The server main loop in `RemoteCtrl.cpp` is currently commented out during development
 - `Dump()` function in `RemoteCtrl.cpp` outputs hex dumps to debug output for packet debugging
+
+## 代码修改规范
+
+修改代码时，必须添加注释说明变更，便于学习和追溯：
+
+```cpp
+// [原代码] int hfind = 0;
+// [问题] 64位系统 _findfirst 返回 intptr_t(64位)，用 int(32位) 存储会截断句柄值
+// [新代码] 使用 intptr_t 确保在 64 位系统正确存储句柄
+intptr_t hfind = 0;
+// [新代码结束]
+```
+
+| 标签 | 用途 |
+|------|------|
+| `[原代码]` | 展示被删除/替换的原始代码 |
+| `[问题]` | 说明原代码的问题或修改原因 |
+| `[新代码]` | 说明新代码的作用 |
+| `[新代码结束]` | 标记新增代码块的结束位置 |
+| `[修复]` | 说明修复方案 |

@@ -125,11 +125,17 @@ int DownloadFile()
 {
     std::string strPath;
     CServerSocket::getInstance()->GetFilePath(strPath);
+    // [新代码] 添加调试输出，便于诊断路径问题
+    TRACE("DownloadFile path: [%s] len=%d\r\n", strPath.c_str(), strPath.size());
+    // [新代码结束]
     long long data = 0;
     FILE* pFile = NULL;
     errno_t err = fopen_s(&pFile, strPath.c_str(), "rb");
     if (err != 0)
     {
+        // [新代码] 输出 fopen 失败原因
+        TRACE("fopen_s failed: err=%d path=[%s]\r\n", err, strPath.c_str());
+        // [新代码结束]
         CPacket pack(4, (BYTE*)&data, 8);
         CServerSocket::getInstance()->Send(pack);
         return -1;
@@ -139,6 +145,8 @@ int DownloadFile()
         fseek(pFile, 0, SEEK_END);
         data = _ftelli64(pFile);
         CPacket head(4, (BYTE*)&data, 8);
+        // head忘记发送了，因此下载的文件是空的
+        CServerSocket::getInstance()->Send(head);
         fseek(pFile, 0, SEEK_SET);
         char buffer[1024] = "";
         size_t rlen = 0;
@@ -146,7 +154,11 @@ int DownloadFile()
             rlen = fread(buffer, 1, 1024, pFile);
             CPacket pack(4, (BYTE*)buffer, rlen);
             CServerSocket::getInstance()->Send(pack);
-        } while (rlen > 1024);
+        // [原代码] } while (rlen > 1024);
+        // [问题] fread 最多读 1024 字节，rlen 永远不会大于 1024，导致循环只执行一次，文件传输不完整
+        // [修复] 改为 rlen == 1024，当读满 1024 字节时继续读取，读取不足时表示文件结束
+        } while (rlen >= 1024);
+        // [新代码结束]
         
         fclose(pFile);
     }
