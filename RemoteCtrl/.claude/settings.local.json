@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git restore:*)",
+      "Bash(xxd:*)",
+      "Bash(iconv:*)",
+      "Bash(printf:*)",
+      "Bash(cat:*)"
+    ]
+  }
+}

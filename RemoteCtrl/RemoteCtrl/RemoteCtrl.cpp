@@ -93,6 +93,7 @@ int MakeDirectoryInfo()
         CServerSocket::getInstance()->Send(pack);
         return -3;
     }
+    int count = 0;
     do {
         FILEINFO finfo;
         finfo.IsDirectory = (fdata.attrib & _A_SUBDIR) != 0;
@@ -101,8 +102,9 @@ int MakeDirectoryInfo()
         TRACE("%s\r\n",finfo.szFileName);
         CPacket pack(2, (BYTE*)&finfo, sizeof(finfo));
         CServerSocket::getInstance()->Send(pack);
-
+        count++;
     } while (!_findnext(hfind, &fdata));
+    TRACE("server:count = %d\r\n",count);
     // 发送信息到控制端
     FILEINFO finfo;
     finfo.HasNext = FALSE;
@@ -401,6 +403,23 @@ int TestConnect()
     return 0;
 }
 
+int  DeleteLocalFile()
+{
+    //TODO:
+    std::string strPath;
+    CServerSocket::getInstance()->GetFilePath(strPath);
+    TCHAR sPath[MAX_PATH] = _T("");
+    mbstowcs(sPath, strPath.c_str(), strPath.size());
+    MultiByteToWideChar(CP_ACP, 0,strPath.c_str(), strPath.size(), 
+        sPath, sizeof(sPath) / sizeof(TCHAR));
+    DeleteFileA(strPath.c_str());
+
+    CPacket pack(9, NULL, 0);
+    bool ret = CServerSocket::getInstance()->Send(pack);
+    TRACE("Send ret = %d\r\n", ret);
+    return 0;
+}
+
 int ExcuteCommand(int nCmd)
 {
     // 全局静态变量
@@ -436,6 +455,10 @@ int ExcuteCommand(int nCmd)
         break;
     case 8:
         ret = UnlockMachine();
+        break;
+        // 删除文件
+    case 9:  
+        ret = DeleteLocalFile();
         break;
     case 1981:
         ret = TestConnect();
