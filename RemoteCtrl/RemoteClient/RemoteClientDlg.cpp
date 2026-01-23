@@ -147,6 +147,7 @@ BOOL CRemoteClientDlg::OnInitDialog()
 	UpdateData(FALSE);
 	m_dlgStatus.Create(IDD_DLG_STATUS, this);
 	m_dlgStatus.ShowWindow(SW_HIDE);
+	m_isFull = false;
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
 
@@ -240,6 +241,45 @@ void CRemoteClientDlg::OnBnClickedBtnFileinfo()
 	//	HTREEITEM hTemp = m_Tree.InsertItem(dr.c_str(), TVI_ROOT, TVI_LAST);
 	//	m_Tree.InsertItem(NULL, hTemp, TVI_LAST);
 	//}
+}
+
+void CRemoteClientDlg::threadEntryForWatchData(void* arg)
+{
+	CRemoteClientDlg* thiz = (CRemoteClientDlg*)arg;
+	thiz->threadWatchData();
+	_endthread();
+}
+
+void CRemoteClientDlg::threadWatchData()
+{
+	CClientSocket* pClient = NULL;
+	do {
+		pClient = CClientSocket::getInstance();
+
+	} while (pClient == NULL);
+	for (;;)
+	{
+		CPacket pack(6, NULL, 0);
+		bool ret = pClient->Send(pack);
+		if (ret)
+		{
+			int cmd = pClient->DealCommand();	// 获取数据
+			if (cmd == 6)
+			{
+				if (m_isFull == false)
+				{
+					BYTE* pData = (BYTE*)pClient->GetPacket().strData.c_str();	//TODO: 存入CI
+					// TODO: 存入CImage
+					m_isFull = true;
+				}
+			}
+		}
+		else
+		{
+			// 避免程序卡死
+			Sleep(1);
+		}
+	}
 }
 
 void CRemoteClientDlg::threadEntryForDownFIle(void* arg)

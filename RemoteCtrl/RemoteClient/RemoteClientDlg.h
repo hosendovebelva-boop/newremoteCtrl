@@ -24,6 +24,11 @@ public:
 	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV 支持
 
 private:
+	CImage m_image;	// 缓存
+	bool m_isFull;	// 缓存是否有数据,true有缓存,false没缓存
+private:
+	static void threadEntryForWatchData(void* arg);	// 静态函数不能使用this指针
+	void threadWatchData();							// 成员函数可以使用this指针
 	static void threadEntryForDownFIle(void* arg);
 	void threadDownFile();
 	void LoadFileCurrent();
