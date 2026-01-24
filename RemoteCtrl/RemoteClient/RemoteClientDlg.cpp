@@ -22,15 +22,15 @@ class CAboutDlg : public CDialogEx
 public:
 	CAboutDlg();
 
-// 对话框数据
+	// 对话框数据
 #ifdef AFX_DESIGN_TIME
 	enum { IDD = IDD_ABOUTBOX };
 #endif
 
-	protected:
+protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支持
 
-// 实现
+	// 实现
 protected:
 	DECLARE_MESSAGE_MAP()
 };
@@ -229,7 +229,7 @@ void CRemoteClientDlg::OnBnClickedBtnFileinfo()
 		if (drivers[i] == ',')
 		{
 			dr += ":";
-			HTREEITEM hTemp = m_Tree.InsertItem(dr.c_str(),TVI_ROOT,TVI_LAST);
+			HTREEITEM hTemp = m_Tree.InsertItem(dr.c_str(), TVI_ROOT, TVI_LAST);
 			m_Tree.InsertItem(NULL, hTemp, TVI_LAST);
 			dr.clear();
 			continue;
@@ -255,48 +255,58 @@ void CRemoteClientDlg::threadEntryForWatchData(void* arg)
 
 void CRemoteClientDlg::threadWatchData()
 {
+	Sleep(50);
 	CClientSocket* pClient = NULL;
 	do {
 		pClient = CClientSocket::getInstance();
-
 	} while (pClient == NULL);
+	ULONGLONG tick = GetTickCount64();
 	for (;;)
 	{
-		CPacket pack(6, NULL, 0);
-		bool ret = pClient->Send(pack);
-		if (ret)
+		// 增加间隔,为什么需要增加间隔？
+		if (GetTickCount64() - tick < 50)
 		{
-			int cmd = pClient->DealCommand();	// 获取数据
-			if (cmd == 6)
+			Sleep(GetTickCount64() - tick);
+		}
+		// 这里应该不需要了
+		//{
+		//int cmd = pClient->DealCommand();	// 获取数据
+		//if (cmd == 6)
+
+		// 更新数据到缓存,为什么将他从if (ret == 6) 中移出到外面窗口显示会更加的快呢？
+		if (m_isFull == false)
+		{
+			int ret = SendMessage(WM_SEND_PACKET, 6 << 1 | 1);
+			if (ret == 6)
 			{
-				// 更新数据到缓存
-				if (m_isFull == false)
+				BYTE* pData = (BYTE*)pClient->GetPacket().strData.c_str();	//TODO: 存入CI
+				HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, 0);
+				if (hMem == NULL)
 				{
-					BYTE* pData = (BYTE*)pClient->GetPacket().strData.c_str();	//TODO: 存入CI
-					HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, 0);
-					if (hMem == NULL)
-					{
-						TRACE("内存不足");
-						Sleep(1);
-						continue;
-					}
-					IStream* pStream = NULL;
-					HRESULT hRet = CreateStreamOnHGlobal(hMem, TRUE, &pStream);
-					if (hRet == S_OK)
-					{
-						ULONG length = 0;
-						pStream->Write(pData, pClient->GetPacket().strData.size(), &length);
-						LARGE_INTEGER bg = { 0 };
-						pStream->Seek(bg, STREAM_SEEK_SET, NULL);
-						m_image.Load(pStream);
-						m_isFull = true;
-					}
+					TRACE("内存不足");
+					Sleep(1);
+					continue;
 				}
+				IStream* pStream = NULL;
+				HRESULT hRet = CreateStreamOnHGlobal(hMem, TRUE, &pStream);
+				if (hRet == S_OK)
+				{
+					ULONG length = 0;
+					pStream->Write(pData, pClient->GetPacket().strData.size(), &length);
+					LARGE_INTEGER bg = { 0 };
+					pStream->Seek(bg, STREAM_SEEK_SET, NULL);
+					m_image.Load(pStream);
+					m_isFull = true;
+				}
+			}
+			else
+			{
+				// 避免程序卡死
+				Sleep(1);
 			}
 		}
 		else
 		{
-			// 避免程序卡死
 			Sleep(1);
 		}
 	}
@@ -336,7 +346,7 @@ void CRemoteClientDlg::threadDownFile()
 		CClientSocket* pClient = CClientSocket::getInstance();
 		do {
 			// int ret = SendCommandPacket(4, false, (BYTE*)(LPCSTR)strFile, strFile.GetLength());
-			int ret = SendMessage(WM_SEND_PACKET,4 << 1 | 0,(LPARAM)(LPCSTR)strFile);
+			int ret = SendMessage(WM_SEND_PACKET, 4 << 1 | 0, (LPARAM)(LPCSTR)strFile);
 			if (ret < 0)
 			{
 				AfxMessageBox("执行下载命令失败！");
@@ -440,7 +450,7 @@ void CRemoteClientDlg::LoadFileInfo()
 		}
 		else
 		{
-			m_List.InsertItem(0,pInfo->szFileName);
+			m_List.InsertItem(0, pInfo->szFileName);
 		}
 		Count++;
 		int cmd = pClient->DealCommand();
@@ -472,7 +482,7 @@ void CRemoteClientDlg::DeleteTreeChildrenItem(HTREEITEM hTree)
 		hSub = m_Tree.GetChildItem(hTree);
 		if (hSub != NULL) m_Tree.DeleteItem(hSub);
 	} while (hSub != NULL);
-	
+
 }
 
 
@@ -550,7 +560,7 @@ void CRemoteClientDlg::OnRunFile()
 	int nSelected = m_List.GetSelectionMark();
 	CString strFile = m_List.GetItemText(nSelected, 0);
 	strFile = strPath + strFile;
-	int ret = SendCommandPacket(3, true,(BYTE*)(LPCSTR)strFile,strFile.GetLength());
+	int ret = SendCommandPacket(3, true, (BYTE*)(LPCSTR)strFile, strFile.GetLength());
 	if (ret < 0)
 	{
 		AfxMessageBox("打开文件命令执行失败！！！！");
@@ -559,16 +569,33 @@ void CRemoteClientDlg::OnRunFile()
 
 LRESULT CRemoteClientDlg::OnSendPacket(WPARAM wParam, LPARAM lParam)
 {
-	CString strFile = (LPCSTR)lParam;
-	int ret = SendCommandPacket(wParam >> 1, wParam & 1, (BYTE*)(LPCSTR)strFile, strFile.GetLength());
+	int ret = 0;
+	int cmd = wParam >> 1;
+	switch (cmd)
+	{
+	case 4:
+	{
+		CString strFile = (LPCSTR)lParam;
+		ret = SendCommandPacket(cmd, wParam & 1, (BYTE*)(LPCSTR)strFile, strFile.GetLength());
+	}
+	break;
+	case 6:
+	{
+		ret = SendCommandPacket(cmd, wParam & 1);
+	}
+	break;
+	default:
+		ret = -1;
+	}
 	return ret;
 }
 
 void CRemoteClientDlg::OnBnClickedBtnStartWatch()
 {
 	// TODO: 在此添加控件通知处理程序代码
-	_beginthread(CRemoteClientDlg::threadEntryForWatchData, 0, this);
+	// 为什么要将非阻塞的放在前面？
 	CWatchDialog dlg(this);
+	_beginthread(CRemoteClientDlg::threadEntryForWatchData, 0, this);
 	dlg.DoModal();
 }
 

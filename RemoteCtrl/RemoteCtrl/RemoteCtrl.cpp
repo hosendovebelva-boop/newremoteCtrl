@@ -48,7 +48,7 @@ int MakeDriverInfo()
     }
     CPacket pack(1, (BYTE*)result.c_str(), result.size());  //打包
     // FFFE070000000100432C44B300
-    Dump((BYTE*)pack.Data(), pack.Size());
+    //Dump((BYTE*)pack.Data(), pack.Size());
     // 发现问题：忘记Send了
     //CServerSocket::getInstance()->Send(CPacket(1,(BYTE*)result.c_str(),result.size()));
     CServerSocket::getInstance()->Send(pack);
