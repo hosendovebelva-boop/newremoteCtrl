@@ -145,7 +145,7 @@ BOOL CRemoteClientDlg::OnInitDialog()
 
 	// TODO: 在此添加额外的初始化代码
 	UpdateData();
-	m_server_address = 0x7F000001;
+	m_server_address = 0xC0A8F083;	// 192.168.240.130
 	m_nPort = _T("9527");
 	UpdateData(FALSE);
 	m_dlgStatus.Create(IDD_DLG_STATUS, this);
@@ -255,13 +255,14 @@ void CRemoteClientDlg::threadEntryForWatchData(void* arg)
 
 void CRemoteClientDlg::threadWatchData()
 {
+	// 可能存在异步问题导致崩溃
 	Sleep(50);
 	CClientSocket* pClient = NULL;
 	do {
 		pClient = CClientSocket::getInstance();
 	} while (pClient == NULL);
 	ULONGLONG tick = GetTickCount64();
-	for (;;)
+	while (!m_isClosed)
 	{
 		// 增加间隔,为什么需要增加间隔？
 		if (GetTickCount64() - tick < 50)
@@ -295,6 +296,8 @@ void CRemoteClientDlg::threadWatchData()
 					pStream->Write(pData, pClient->GetPacket().strData.size(), &length);
 					LARGE_INTEGER bg = { 0 };
 					pStream->Seek(bg, STREAM_SEEK_SET, NULL);
+					if((HBITMAP)m_image != NULL)
+						m_image.Destroy();
 					m_image.Load(pStream);
 					m_isFull = true;
 				}
@@ -598,11 +601,14 @@ LRESULT CRemoteClientDlg::OnSendPacket(WPARAM wParam, LPARAM lParam)
 
 void CRemoteClientDlg::OnBnClickedBtnStartWatch()
 {
+	m_isClosed = false;
 	// TODO: 在此添加控件通知处理程序代码
 	// 为什么要将非阻塞的放在前面？
 	CWatchDialog dlg(this);
-	_beginthread(CRemoteClientDlg::threadEntryForWatchData, 0, this);
+	HANDLE hThread = (HANDLE)_beginthread(CRemoteClientDlg::threadEntryForWatchData, 0, this);
 	dlg.DoModal();
+	m_isClosed = true;
+	WaitForSingleObject(hThread, 500);
 }
 
 void CRemoteClientDlg::OnTimer(UINT_PTR nIDEvent)

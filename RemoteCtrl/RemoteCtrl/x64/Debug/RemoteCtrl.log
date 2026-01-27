@@ -18,15 +18,6 @@ D:\c++\project\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\RemoteCtrl.cpp(29,23)
 D:\c++\project\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\RemoteCtrl.cpp(29,23): warning C4309: “参数”: 截断常量值
   (编译源文件“/RemoteCtrl.cpp”)
   
-D:\c++\project\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\RemoteCtrl.cpp(206,20): warning C4552: ”!=“: 未使用表达式结果
-  (编译源文件“/RemoteCtrl.cpp”)
-  
-D:\c++\project\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\RemoteCtrl.cpp(209,20): warning C4552: ”!=“: 未使用表达式结果
-  (编译源文件“/RemoteCtrl.cpp”)
-  
-D:\c++\project\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\RemoteCtrl.cpp(212,20): warning C4552: ”!=“: 未使用表达式结果
-  (编译源文件“/RemoteCtrl.cpp”)
-  
 D:\c++\project\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\RemoteCtrl.cpp(417,64): warning C4267: “参数”: 从“size_t”转换到“int”，可能丢失数据
   (编译源文件“/RemoteCtrl.cpp”)
   
