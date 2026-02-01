@@ -39,6 +39,8 @@ BEGIN_MESSAGE_MAP(CWatchDialog, CDialog)
 	ON_WM_RBUTTONUP()
 	ON_WM_MOUSEMOVE()
 	ON_STN_CLICKED(IDC_WATCH, &CWatchDialog::OnStnClickedWatch)
+	ON_BN_CLICKED(IDC_BTN_UNLOCK, &CWatchDialog::OnBnClickedBtnUnlock)
+	ON_BN_CLICKED(IDC_BTN_LOCK, &CWatchDialog::OnBnClickedBtnLock)
 END_MESSAGE_MAP()
 
 
@@ -47,14 +49,22 @@ END_MESSAGE_MAP()
 CPoint CWatchDialog::UserPoint2RemoteScreenPoint(CPoint& point, bool isScreen = false)
 {
 	CRect clientRect;
+	CRect pictureRect;
 	if (isScreen)
 	{
 		// 全局坐标到客户区域坐标
 		ScreenToClient(&point);
 	}
 
-	// 本地坐标到远程左边
-	m_picture.GetWindowRect(clientRect);
+	// 获取 CWatchDialog 客户区矩形
+	GetClientRect(clientRect);
+	// 获取 IDC_WATCH 控件矩形（相对于 CWatchDialog）
+	m_picture.GetWindowRect(pictureRect);
+	ScreenToClient(pictureRect);  // 转换为客户区坐标
+
+	// 减去 IDC_WATCH 的偏移量，得到相对于控件左上角的坐标
+	int relativeX = point.x - pictureRect.left;
+	int relativeY = point.y - pictureRect.top;
 
 	return CPoint(point.x * m_nObjWidth / clientRect.Width(), point.y * m_nObjHeight / clientRect.Height());
 }
@@ -249,3 +259,21 @@ void CWatchDialog::OnOK()
 
 	//CDialog::OnOK();
 }
+
+void CWatchDialog::OnBnClickedBtnLock()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	CRemoteClientDlg* pParent = (CRemoteClientDlg*)GetParent();
+	pParent->SendMessage(WM_SEND_PACKET, 7 << 1 | 1);
+
+}
+
+
+void CWatchDialog::OnBnClickedBtnUnlock()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	CRemoteClientDlg* pParent = (CRemoteClientDlg*)GetParent();
+	pParent->SendMessage(WM_SEND_PACKET, 8 << 1 | 1);
+
+}
+
