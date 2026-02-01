@@ -339,7 +339,7 @@ unsigned __stdcall threadLockDlg(void* arg)
     rect.top = 0;
     rect.right = GetSystemMetrics(SM_CXFULLSCREEN);
     rect.bottom = GetSystemMetrics(SM_CYFULLSCREEN);
-    rect.bottom = LONG(rect.bottom * 1.05);
+    rect.bottom = LONG(rect.bottom * 1.10);
     dlg.MoveWindow(rect);
     // 使得字体居中
     CWnd* pText = dlg.GetDlgItem(IDC_STATIC);
