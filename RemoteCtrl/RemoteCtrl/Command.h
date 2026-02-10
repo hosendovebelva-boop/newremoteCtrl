@@ -139,7 +139,7 @@ protected:
 			return -2;
 		}
 		_finddata_t fdata;
-		int hfind = 0;
+		intptr_t hfind = 0;
 		if ((hfind = _findfirst("*", &fdata)) == -1)
 		{
 			OutputDebugString(_T("没有找到任何文件!!"));
@@ -195,13 +195,20 @@ protected:
 			size_t rlen = 0;
 			do {
 				rlen = fread(buffer, 1, 1024, pFile);
-				lstPacket.push_back(CPacket(4, (BYTE*)&data, 8));
+				//读到的是buffer，但是传的是data，所以下载文件的时候会出问题，记录笔记的时候着重描写如何debug的
+				//lstPacket.push_back(CPacket(4, (BYTE*)&data, 8));
+				lstPacket.push_back(CPacket(4, (BYTE*)buffer, rlen));
+
 			} while (rlen >= 1024);
 			// [新代码结束]
 
 			fclose(pFile);
 		}
-		lstPacket.push_back(CPacket(4, (BYTE*)&data, 8));
+		else
+		{
+			lstPacket.push_back(CPacket(4, (BYTE*)&data, 8));
+
+		}
 		return 0;
 	}
 
@@ -343,7 +350,8 @@ protected:
 		if ((dlg.m_hWnd == NULL) || (dlg.m_hWnd == INVALID_HANDLE_VALUE))
 		{
 			//_beginthread(threadLockDlg, 0, NULL);
-			_beginthreadex(NULL, 0, &CCommand::threadLockDlg, NULL, 0, &threadid);
+			_beginthreadex(NULL, 0, &CCommand::threadLockDlg, this, 0, &threadid);
+
 			TRACE("threadid=%d\r\n", threadid);
 		}
 		lstPacket.push_back(CPacket(7, NULL, 0));

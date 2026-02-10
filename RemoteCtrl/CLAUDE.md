@@ -58,6 +58,7 @@ Output binaries are placed in `x64/Debug/` or `x64/Release/`.
 | 2.7 鼠标远程控制 | MOUSEEV 结构、SetCursorPos/mouse_event、坐标转换 |
 | 2.8 文件下载实现 | 分块传输、线程模式、fopen/fread/fwrite |
 | 2.9 机器锁定解锁 | CLockInfoDialog、ClipCursor、ShowCursor、任务栏隐藏 |
+| 5.5 Debug：目录信息获取崩溃与数据丢失 | _findfirst 句柄截断修复、DealCommand 缓冲区优先消费、x64 调试技巧 |
 
 ### 已实现功能清单
 

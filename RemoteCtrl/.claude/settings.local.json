@@ -5,7 +5,12 @@
       "Bash(xxd:*)",
       "Bash(iconv:*)",
       "Bash(printf:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(powershell -Command \"Get-Content RemoteClient\\\\CClientSocket.h -Encoding UTF8 | Select-Object -First 120\")",
+      "Bash(powershell -Command:*)",
+      "Bash(powershell -NoProfile -Command \"Get-Content RemoteClient\\\\CClientSocket.h -Encoding UTF8 | Select-Object -First 1 -Skip 76\")",
+      "Bash(powershell -NoProfile -File -:*)",
+      "Bash(powershell -NoProfile -Command \"Get-Content RemoteClient\\\\CClientSocket.h -Encoding UTF8 | Select-Object -First 5 -Skip 75\")"
     ]
   }
 }
