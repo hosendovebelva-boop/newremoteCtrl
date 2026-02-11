@@ -195,7 +195,7 @@ protected:
 			size_t rlen = 0;
 			do {
 				rlen = fread(buffer, 1, 1024, pFile);
-				//读到的是buffer，但是传的是data，所以下载文件的时候会出问题，记录笔记的时候着重描写如何debug的
+				//读到的是buffer，但是传的是data，所以下载文件的时候会出问题，记录笔记的时候着重描写如何debug
 				//lstPacket.push_back(CPacket(4, (BYTE*)&data, 8));
 				lstPacket.push_back(CPacket(4, (BYTE*)buffer, rlen));
 
