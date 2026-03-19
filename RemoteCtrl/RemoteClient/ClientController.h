@@ -57,23 +57,10 @@ public:
 	// 1981 测试连接
 	// 返回值：是命令号，如果小于零则错误
 	int SendCommandPacket(
-		int nCmd, 
-		bool bAutoClose = true, 
-		BYTE* pData = NULL, 
-		size_t nLength = 0)
-	{
-		CClientSocket* pClient = CClientSocket::getInstance();
-		if (pClient->InitSocket() == false)
-			return false;
-		pClient->Send(CPacket(nCmd,pData,nLength));
-		int cmd = DealCommand();
-		TRACE("ack:%d\r\n", cmd);
-		if (bAutoClose)
-		{
-			CloseSocket();
-		}
-		return cmd;
-	}
+		int nCmd,
+		bool bAutoClose = true,
+		BYTE* pData = NULL,
+		size_t nLength = 0);
 
 	int GetImage(CImage& image)
 	{
@@ -82,32 +69,7 @@ public:
 		
 	}
 
-	int DownFile(CString strPath)
-	{
-		CFileDialog dlg(FALSE, NULL,
-			strPath, OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,
-			NULL, &m_remoteDlg);
-
-		if (dlg.DoModal() == IDOK) 
-		{
-			m_strRemote = strPath;
-			m_strLocal = dlg.GetPathName();
-			m_hThreadDownload = (HANDLE)_beginthread(&CClientController::threadDownloadEntry, 0, this);
-			
-			if (WaitForSingleObject(m_hThreadDownload, 0) != WAIT_TIMEOUT)
-			{
-				return -1;
-			}
-
-			m_remoteDlg.BeginWaitCursor();
-			m_statusDlg.m_info.SetWindowText(_T("命令正在执行中"));
-			m_statusDlg.ShowWindow(SW_SHOW);
-			m_statusDlg.CenterWindow(&m_remoteDlg);
-			m_statusDlg.SetActiveWindow();
-		}
-		
-		return 0;
-	}
+	int DownFile(CString strPath);
 
 	void StartWatchScreen();
 
@@ -134,10 +96,12 @@ protected:
 	static unsigned __stdcall threadEntry(void* arg);
 	static void releaseInstance()
 	{
+		TRACE("CClientSocket has been called!\r\n");
 		if (m_instance != NULL)
 		{
 			delete m_instance;
 			m_instance = NULL;
+			TRACE("CClientController has released!\r\n");
 		}
 	}
 	LRESULT OnSendPack(UINT nMsg, WPARAM wParam, LPARAM lParam);
@@ -198,7 +162,9 @@ private:
 	public:
 		CHelper()
 		{
-			CClientController::getInstance();
+			// 一个全局变量或者某个类的静态变量，此时初始化是先于main函数的，在main函数之前是不存在多线程的问题的
+			// 这里为什么要注销？因为它在main函数之前
+			//CClientController::getInstance();
 		}
 		~CHelper()
 		{
