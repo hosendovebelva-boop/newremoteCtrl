@@ -55,7 +55,6 @@ public:
 			}
 			CloseClient();
 		}
-
 		return 0;
 	}
 protected:
