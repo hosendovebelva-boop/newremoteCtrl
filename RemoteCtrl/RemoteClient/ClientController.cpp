@@ -83,7 +83,7 @@ LRESULT CClientController::SendMessage(MSG msg)
 int CClientController::SendCommandPacket(int nCmd, bool bAutoClose,
 	BYTE* pData, size_t nLength, std::list<CPacket>* plstPacks)
 {
-	TRACE("cmd:%d %s start %lld \r\n", nCmd, __FUNCTION__, GetTickCount64());
+	TRACE("cmd:%d %s start %llu \r\n", nCmd, __FUNCTION__, GetTickCount64());
 	CClientSocket* pClient = CClientSocket::getInstance();
 	HANDLE hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
 	std::list<CPacket> lstPacks;	// 应答结果包
@@ -91,14 +91,14 @@ int CClientController::SendCommandPacket(int nCmd, bool bAutoClose,
 	{
 		plstPacks = &lstPacks;
 	}
-	pClient->SendPacket(CPacket(nCmd, pData, nLength, hEvent), *plstPacks);
+	pClient->SendPacket(CPacket(nCmd, pData, nLength, hEvent), *plstPacks, bAutoClose);
 	CloseHandle(hEvent);	// 回收事件句柄，防止资源耗尽
 	if (plstPacks->size() > 0)
 	{
-		TRACE("%s start %lld \r\n", __FUNCTION__, GetTickCount64());
+		TRACE("%s start %llu \r\n", __FUNCTION__, GetTickCount64());
 		return plstPacks->front().sCmd;
 	}
-	TRACE("%s start %lld \r\n", __FUNCTION__, GetTickCount64());
+	TRACE("%s start %llu \r\n", __FUNCTION__, GetTickCount64());
 	return -1;
 }
 
