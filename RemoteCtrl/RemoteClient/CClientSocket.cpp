@@ -38,31 +38,63 @@ void Dump(BYTE* pData, size_t nSize)
 	OutputDebugStringA(strOut.c_str());
 }
 
+bool CClientSocket::InitSocket()
+{
+	if (m_sock != INVALID_SOCKET)
+		CloseSocket();
+	m_sock = socket(PF_INET, SOCK_STREAM, 0);
+	//TODO: 校验
+	if (m_sock == -1)
+		return false;
+	sockaddr_in serv_adr;
+	memset(&serv_adr, 0, sizeof(serv_adr));
+	serv_adr.sin_family = AF_INET;
+	// 大小端转换错误
+	TRACE("addr %08X nIP %08X\r\n", inet_addr("127.0.0.1"), m_nIP);
+	serv_adr.sin_addr.s_addr = inet_addr("127.0.0.1");
+	//serv_adr.sin_addr.s_addr = nIP;
+	serv_adr.sin_addr.s_addr = htonl(m_nIP);
+	serv_adr.sin_port = htons(m_nPort);
+	if (serv_adr.sin_addr.s_addr == INADDR_NONE)
+	{
+		AfxMessageBox("制定的IP地址不存在！！");
+		return false;
+	}
+	int ret = connect(m_sock, (sockaddr*)&serv_adr, sizeof(serv_adr));
+	if (ret == -1)
+	{
+		AfxMessageBox("连接失败");
+		TRACE("连接失败，%d %s\r\n", WSAGetLastError(), GetErrInfo(WSAGetLastError()).c_str());
+		return false;
+	}
+	TRACE("socket init done!\r\n");
+	return true;
+}
+
 bool CClientSocket::SendPacket(const CPacket& pack, std::list<CPacket>& lstPacks, bool isAutoClosed)
 {
 	// 发包的时候才去判断是否有效
-	if (m_sock == INVALID_SOCKET)
+	if (m_sock == INVALID_SOCKET && m_hThread == INVALID_HANDLE_VALUE)
 	{
-		/*if (InitSocket() == false)
-		{
-			return false;
-		}*/
-
-		_beginthread(&CClientSocket::threadEntry, 0, this);
+		m_hThread = (HANDLE)_beginthread(&CClientSocket::threadEntry, 0, this);
+		TRACE("start thread\r\n");
 	}
+	m_lock.lock();
 	auto pr = m_mapAck.insert(std::pair<HANDLE,
 		std::list<CPacket>&>(pack.hEvent, lstPacks));
 	m_mapAutoClosed.insert(std::pair<HANDLE, bool>(pack.hEvent, isAutoClosed));
 	m_lstSend.push_back(pack);
-	TRACE("cmd:%d event %IX thread id %lu\r\n",
-		pack.sCmd, (UINT_PTR)pack.hEvent, GetCurrentThreadId());
-	m_lstSend.push_back(pack);
+	m_lock.unlock();
+	TRACE("cmd:%d event %08X thread id %d\r\n", pack.sCmd, pack.hEvent, GetCurrentThreadId());
 	WaitForSingleObject(pack.hEvent, INFINITE);
+	TRACE("cmd:%d event %08X thread id %d\r\n", pack.sCmd, pack.hEvent, GetCurrentThreadId());
 	std::map<HANDLE, std::list<CPacket>&>::iterator it;
 	it = m_mapAck.find(pack.hEvent);
 	if (it != m_mapAck.end())
 	{
+		m_lock.lock();
 		m_mapAck.erase(it);
+		m_lock.unlock();
 		return true;
 	}
 	return false;
@@ -86,7 +118,9 @@ void CClientSocket::threadFunc()
 		if (m_lstSend.size() > 0)
 		{
 			TRACE("lstSend size: %d\r\n", m_lstSend.size());
+			m_lock.lock();
 			CPacket& head = m_lstSend.front();
+			m_lock.unlock();
 			if (Send(head) == false)
 			{
 				TRACE("send failed!\r\n");
@@ -99,7 +133,8 @@ void CClientSocket::threadFunc()
 				std::map<HANDLE, bool>::iterator it0 = m_mapAutoClosed.find(head.hEvent);
 				do {
 					int length = recv(m_sock, pBuffer + index, BUFFER_SIZE - index, 0);
-					if (length > 0 || index > 0)
+					TRACE("recv %d %d \r\n", length, index);
+					if ((length > 0) || (index > 0))
 					{
 						index += length;
 						size_t size = (size_t)index;
@@ -110,9 +145,11 @@ void CClientSocket::threadFunc()
 							it->second.push_back(pack);
 							memmove(pBuffer, pBuffer + size, index - size);
 							index -= size;
+							TRACE("SetEvent %d %d\r\n", pack.sCmd, it0->second);
 							if (it0->second)
 							{
 								SetEvent(head.hEvent);
+								break;
 							}
 						}
 					}
@@ -121,16 +158,20 @@ void CClientSocket::threadFunc()
 						CloseSocket();
 						SetEvent(head.hEvent);	// 等到服务器关闭命令之后，在通知事件完成
 						m_mapAutoClosed.erase(it0);
+						TRACE("SetEvent %d %d\r\n", head.sCmd, it0->second);
 						break;
 					}
 				} while (it0->second == false);
 			}
+			m_lock.lock();
 			m_lstSend.pop_front();
+			m_lock.unlock();
 			if (InitSocket() == false)
 			{
 				InitSocket();
 			}
 		}
+		Sleep(1);
 	}
 	CloseSocket();
 }
