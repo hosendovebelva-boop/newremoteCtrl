@@ -50,23 +50,15 @@ END_MESSAGE_MAP()
 CPoint CWatchDialog::UserPoint2RemoteScreenPoint(CPoint& point, bool isScreen = false)
 {
 	CRect clientRect;
-	CRect pictureRect;
-	if (isScreen)
+	if (!isScreen)
 	{
-		// 全局坐标到客户区域坐标
-		ScreenToClient(&point);
+		ClientToScreen(&point);		// 转换为相对屏幕左上角的坐标（屏幕内的绝对坐标）
 	}
-
-	// 获取 CWatchDialog 客户区矩形
-	GetClientRect(clientRect);
-	// 获取 IDC_WATCH 控件矩形（相对于 CWatchDialog）
-	m_picture.GetWindowRect(pictureRect);
-	ScreenToClient(pictureRect);  // 转换为客户区坐标
-
-	// 减去 IDC_WATCH 的偏移量，得到相对于控件左上角的坐标
-	int relativeX = point.x - pictureRect.left;
-	int relativeY = point.y - pictureRect.top;
-
+	m_picture.ScreenToClient(&point);	// 全局坐标到客户区域坐标
+	TRACE("x=%d y=%d \r\n", point.x, point.y);
+	// 本地坐标，到远程坐标
+	m_picture.GetWindowRect(clientRect);
+	TRACE("x=%d y=%d \r\n", clientRect.Width(), clientRect.Height());
 	return CPoint(point.x * m_nObjWidth / clientRect.Width(), point.y * m_nObjHeight / clientRect.Height());
 }
 

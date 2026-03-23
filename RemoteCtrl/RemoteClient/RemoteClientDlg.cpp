@@ -289,6 +289,7 @@ void CRemoteClientDlg::LoadFileInfo()
 		(BYTE*)(LPCTSTR)strPath, strPath.GetLength(),&lstPackets);
 	if (lstPackets.size() > 0)
 	{
+		TRACE("lstPackets.size = %d\r\n",lstPackets.size());
 		std::list<CPacket>::iterator it = lstPackets.begin();
 		for (;it != lstPackets.end();it++)
 		{
