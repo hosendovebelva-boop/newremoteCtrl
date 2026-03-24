@@ -10,7 +10,7 @@ CClientController* CClientController::getInstance()
 	if (m_instance == NULL)
 	{
 		m_instance = new CClientController();
-		TRACE("CClientController size is %d\r\n",sizeof(*m_instance));
+		TRACE("CClientController size is %d\r\n", sizeof(*m_instance));
 		struct
 		{
 			UINT nMsg;
@@ -36,6 +36,8 @@ CClientController* CClientController::getInstance()
 	return m_instance;
 	// [新代码结束]
 }
+
+
 
 int CClientController::InitController()
 {
@@ -80,26 +82,11 @@ LRESULT CClientController::SendMessage(MSG msg)
 	return info.result;
 }
 
-int CClientController::SendCommandPacket(int nCmd, bool bAutoClose,
-	BYTE* pData, size_t nLength, std::list<CPacket>* plstPacks)
+bool CClientController::SendCommandPacket(HWND hWnd, int nCmd, bool bAutoClose, BYTE* pData, size_t nLength)
 {
 	TRACE("cmd:%d %s start %llu \r\n", nCmd, __FUNCTION__, GetTickCount64());
 	CClientSocket* pClient = CClientSocket::getInstance();
-	HANDLE hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
-	std::list<CPacket> lstPacks;	// 应答结果包
-	if (plstPacks == NULL)
-	{
-		plstPacks = &lstPacks;
-	}
-	pClient->SendPacket(CPacket(nCmd, pData, nLength, hEvent), *plstPacks, bAutoClose);
-	CloseHandle(hEvent);	// 回收事件句柄，防止资源耗尽
-	if (plstPacks->size() > 0)
-	{
-		TRACE("%s start %llu \r\n", __FUNCTION__, GetTickCount64());
-		return plstPacks->front().sCmd;
-	}
-	TRACE("%s start %llu \r\n", __FUNCTION__, GetTickCount64());
-	return -1;
+	return pClient->SendPacket(hWnd, CPacket(nCmd, pData, nLength), bAutoClose);
 }
 
 int CClientController::DownFile(CString strPath)
@@ -149,7 +136,9 @@ void CClientController::threadWatchScreen()
 		if (m_watchDlg.isFull() == false)
 		{
 			std::list<CPacket> lstPacks;
-			int ret = SendCommandPacket(6, true, NULL, 0, &lstPacks);
+			int ret = SendCommandPacket(m_watchDlg.GetSafeHwnd(),6, true, NULL, 0);
+			//TODO:添加消息响应函数 WM_SEND_ACK
+			//TODO:控制发送频率
 			if (ret == 6)
 			{
 				if (CEdoyunTool::Bytes2Image(m_watchDlg.GetImage(),
@@ -157,13 +146,16 @@ void CClientController::threadWatchScreen()
 				{
 					m_watchDlg.SetImageStatus(true);
 					TRACE("成功设置图片 %08X\r\n", (HBITMAP)m_watchDlg.GetImage());
-					TRACE("和校验： 08X\r\n",lstPacks.front().sSum);
+					TRACE("和校验： 08X\r\n", lstPacks.front().sSum);
 				}
 				else
 				{
-					TRACE("获取图片失败！ret = %d \r\n",ret);
-
+					TRACE("获取图片失败！ret = %d \r\n", ret);
 				}
+			}
+			else
+			{
+				TRACE("获取图片失败！ret = %d \r\n", ret);
 			}
 		}
 		Sleep(1);
@@ -189,10 +181,10 @@ void CClientController::threadDownloadFile()
 		return;
 	}
 	CClientSocket* pClient = CClientSocket::getInstance();
-	do 
+	do
 	{
-		int ret = SendCommandPacket(4, false, 
-			(BYTE*)(LPCSTR)m_strRemote,m_strRemote.GetLength());
+		int ret = SendCommandPacket(m_remoteDlg,4, false,
+			(BYTE*)(LPCSTR)m_strRemote, m_strRemote.GetLength());
 		long long nLenght = *(long long*)pClient->GetPacket().strData.c_str();
 		if (nLenght == 0)
 		{
@@ -213,13 +205,12 @@ void CClientController::threadDownloadFile()
 			fwrite(pClient->GetPacket().strData.c_str(), 1, pClient->GetPacket().strData.size(), pFile);
 			nCount += pClient->GetPacket().strData.size();
 		}
-	}
-	while (false);
+	} while (false);
 	fclose(pFile);
 	pClient->CloseSocket();
 	m_statusDlg.ShowWindow(SW_HIDE);
 	m_remoteDlg.EndWaitCursor();
-	m_remoteDlg.MessageBox(_T("下载完成！"),_T("完成"));
+	m_remoteDlg.MessageBox(_T("下载完成！"), _T("完成"));
 
 
 }
@@ -246,7 +237,7 @@ void CClientController::threadFunc()
 
 			if (it != m_mapFunc.end())
 			{
-				pmsg->result = (this->*it->second)(pmsg->msg.message, 
+				pmsg->result = (this->*it->second)(pmsg->msg.message,
 					pmsg->msg.wParam, pmsg->msg.lParam);
 			}
 			else
@@ -260,7 +251,7 @@ void CClientController::threadFunc()
 			std::map<UINT, MSGFUNC>::iterator it = m_mapFunc.find(msg.message);
 			if (it != m_mapFunc.end())
 			{
-				(this->*it->second)(msg.message,msg.wParam,msg.lParam);
+				(this->*it->second)(msg.message, msg.wParam, msg.lParam);
 			}
 		}
 	}
