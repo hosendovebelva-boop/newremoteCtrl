@@ -82,11 +82,18 @@ LRESULT CClientController::SendMessage(MSG msg)
 	return info.result;
 }
 
-bool CClientController::SendCommandPacket(HWND hWnd, int nCmd, bool bAutoClose, BYTE* pData, size_t nLength)
+bool CClientController::SendCommandPacket(HWND hWnd, int nCmd, bool bAutoClose, BYTE* pData, size_t nLength, WPARAM wParam)
 {
 	TRACE("cmd:%d %s start %llu \r\n", nCmd, __FUNCTION__, GetTickCount64());
 	CClientSocket* pClient = CClientSocket::getInstance();
-	return pClient->SendPacket(hWnd, CPacket(nCmd, pData, nLength), bAutoClose);
+	return pClient->SendPacket(hWnd, CPacket(nCmd, pData, nLength), bAutoClose, wParam);
+}
+
+void CClientController::DownloadEnd()
+{
+	m_statusDlg.ShowWindow(SW_SHOW);
+	m_remoteDlg.EndWaitCursor();
+	m_remoteDlg.MessageBox(_T("下载完成！！"), _T("完成"));
 }
 
 int CClientController::DownFile(CString strPath)
@@ -100,12 +107,19 @@ int CClientController::DownFile(CString strPath)
 		{
 			m_strRemote = strPath;
 			m_strLocal = dlg.GetPathName();
-			m_hThreadDownload = (HANDLE)_beginthread(&CClientController::threadDownloadEntry, 0, this);
-
-			if (WaitForSingleObject(m_hThreadDownload, 0) != WAIT_TIMEOUT)
+			FILE* pFile = fopen(m_strLocal, "wb+");
+			if (pFile == NULL)
 			{
+				AfxMessageBox(_T("本地没有权限保存该文件，文件无法创建!"));
 				return -1;
 			}
+			SendCommandPacket(m_remoteDlg, 4, false, (BYTE*)(LPCSTR)m_strRemote, m_strRemote.GetLength(), (WPARAM)pFile);
+			//m_hThreadDownload = (HANDLE)_beginthread(&CClientController::threadDownloadEntry, 0, this);
+
+			/*if (WaitForSingleObject(m_hThreadDownload, 0) != WAIT_TIMEOUT)
+			{
+				return -1;
+			}*/
 
 			m_remoteDlg.BeginWaitCursor();
 			m_statusDlg.m_info.SetWindowText(_T("命令正在执行中"));
@@ -136,7 +150,7 @@ void CClientController::threadWatchScreen()
 		if (m_watchDlg.isFull() == false)
 		{
 			std::list<CPacket> lstPacks;
-			int ret = SendCommandPacket(m_watchDlg.GetSafeHwnd(),6, true, NULL, 0);
+			int ret = SendCommandPacket(m_watchDlg.GetSafeHwnd(), 6, true, NULL, 0);
 			//TODO:添加消息响应函数 WM_SEND_ACK
 			//TODO:控制发送频率
 			if (ret == 6)
@@ -183,8 +197,8 @@ void CClientController::threadDownloadFile()
 	CClientSocket* pClient = CClientSocket::getInstance();
 	do
 	{
-		int ret = SendCommandPacket(m_remoteDlg,4, false,
-			(BYTE*)(LPCSTR)m_strRemote, m_strRemote.GetLength());
+		int ret = SendCommandPacket(m_remoteDlg, 4, false,
+			(BYTE*)(LPCSTR)m_strRemote, m_strRemote.GetLength(),(WPARAM)pFile);
 		long long nLenght = *(long long*)pClient->GetPacket().strData.c_str();
 		if (nLenght == 0)
 		{

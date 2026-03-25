@@ -1,4 +1,9 @@
 ﻿#pragma once
+#ifndef WM_SEND_PACK_ACK
+// 宏名称和括号之间加一个空格
+#define WM_SEND_PACK_ACK (WM_USER + 2)  
+#endif
+
 #include "afxdialogex.h"
 
 
@@ -43,6 +48,7 @@ public:
 	virtual BOOL OnInitDialog();
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	CStatic m_picture;
+	afx_msg LRESULT OnSendPackAck(WPARAM wParam, LPARAM lParam);
 	afx_msg void OnLButtonDblClk(UINT nFlags, CPoint point);
 	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
 	afx_msg void OnLButtonUp(UINT nFlags, CPoint point);
