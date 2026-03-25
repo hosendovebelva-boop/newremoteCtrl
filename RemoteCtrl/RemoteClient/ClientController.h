@@ -138,7 +138,7 @@ private:
 	typedef LRESULT(CClientController::* MSGFUNC)(UINT nMsg, WPARAM wParam, LPARAM lParam);
 	static std::map<UINT, MSGFUNC> m_mapFunc;
 	// UUID:确保每次创建的都是不一样的
-	CWatchDialog m_watchDlg;
+	CWatchDialog m_watchDlg;		// 消息包在对话框关闭之后可能会导致内存泄漏
 	CRemoteClientDlg m_remoteDlg;
 	CStatusDlg m_statusDlg;
 	HANDLE m_hThread;

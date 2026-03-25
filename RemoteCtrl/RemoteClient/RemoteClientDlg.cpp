@@ -516,6 +516,7 @@ LRESULT CRemoteClientDlg::OnSendPackAck(WPARAM wParam, LPARAM lParam)
 			}
 			break;
 			case 5:
+				break;
 			case 6:
 				break;
 			case 7:
