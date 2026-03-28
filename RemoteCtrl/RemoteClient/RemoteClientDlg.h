@@ -13,11 +13,11 @@
 // CRemoteClientDlg 对话框
 class CRemoteClientDlg : public CDialogEx
 {
-// 构造
+	// 构造
 public:
 	CRemoteClientDlg(CWnd* pParent = nullptr);	// 标准构造函数
 
-// 对话框数据
+	// 对话框数据
 #ifdef AFX_DESIGN_TIME
 	enum { IDD = IDD_REMOTECLIENT_DIALOG };
 #endif
@@ -29,10 +29,15 @@ public:
 private:
 	bool m_isClosed;// 监视是否关闭	
 private:
+	void DealCommand(WORD nCmd, const std::string& strData, LPARAM lParam);
+	void InitUIData();
 	void LoadFileCurrent();
+	void Str2Tree(const std::string& driver, CTreeCtrl& tree);
+	void UpdateFileInfo(const FILEINFO& finfo, HTREEITEM hParent);
+	void UpdateDownloadFile(const std::string& strData, FILE* pFile);
 	CString GetPath(HTREEITEM hTree);
 	void DeleteTreeChildrenItem(HTREEITEM hTree);
-	
+
 	// 实现
 protected:
 	HICON m_hIcon;
@@ -65,4 +70,3 @@ public:
 	afx_msg LRESULT OnSendPackAck(WPARAM wParam, LPARAM lParam);
 
 };
- 
