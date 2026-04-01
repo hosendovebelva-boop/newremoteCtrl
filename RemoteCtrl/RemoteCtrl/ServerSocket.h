@@ -193,6 +193,7 @@ private:
 
 	static void releaseInstance()
 	{
+		//·ÀÓùĞÔ±à³Ì
 		if (m_instance != NULL)
 		{
 			CServerSocket* tmp = m_instance;
