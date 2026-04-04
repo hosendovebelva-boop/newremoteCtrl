@@ -1,4 +1,4 @@
-# CLAUDE.md
+﻿# CLAUDE.md
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
@@ -24,7 +24,7 @@ This project is linked to an Obsidian notebook, which records design concepts an
 
 | Item | Path |
 |------|------|
-| **Notebook** | `D:\obsidian\C++\6.项目\远控系统\` |
+| **Notebook** | `D:\obsidian\C++\6.Projects\RemoteCtrl\` |
 | **Skill** | `remote-ctrl-note` (Used within the notebook) |
 
 ### Skill Configuration

@@ -1,6 +1,6 @@
-[
+﻿[
   {
-    "Name": "新建配置文件",
+    "Name": "New launch profile",
     "Projects": [
       {
         "Path": "RemoteCtrl\\RemoteCtrl.vcxproj",
