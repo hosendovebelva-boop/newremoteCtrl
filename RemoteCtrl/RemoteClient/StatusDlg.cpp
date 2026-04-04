@@ -29,7 +29,16 @@ void CStatusDlg::DoDataExchange(CDataExchange* pDX)
 
 
 BEGIN_MESSAGE_MAP(CStatusDlg, CDialog)
+	ON_EN_CHANGE(IDC_EDIT_INFO, &CStatusDlg::OnEnChangeEditInfo)
 END_MESSAGE_MAP()
 
 
 // CStatusDlg message handlers
+
+void CStatusDlg::OnEnChangeEditInfo()
+{
+	// TODO: If this control is a RICHEDIT control, it will not
+	// send this notification unless the CDialog::OnInitDialog() function is overridden and CRichEditCtrl().SetEventMask() is called,
+	// and the ENM_CHANGE flag is "OR"ed into the mask. 
+	// TODO:  Add the code for the control notification handler here
+}

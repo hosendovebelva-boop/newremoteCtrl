@@ -69,4 +69,5 @@ public:
 	afx_msg void OnEnChangeEditPort();
 	afx_msg LRESULT OnSendPackAck(WPARAM wParam, LPARAM lParam);
 
+	afx_msg void OnTvnSelchangedTreeDir(NMHDR* pNMHDR, LRESULT* pResult);
 };

@@ -1,0 +1,220 @@
+﻿Diagnose log at 2026-04-04T08:10:52Z
+
+AppPath: C:\Program Files\Git\mingw64\bin\git-credential-manager.exe
+InstallDir: C:\Program Files\Git\mingw64\bin\
+Version: 2.6.1+786ab03440ddc82e807a97c0e540f5247e44cec6
+
+------------
+Diagnostic: Environment
+Skipped: False
+Success: True
+Exception: None
+Log:
+OSType: Windows
+OSVersion: 10.0 (build 26100)
+Reading environment variables... OK
+ Variables:
+HOMEPATH=\Users\Administrator
+DriverData=C:\Windows\System32\Drivers\DriverData
+COMPUTERNAME=CHINAMI-KBC0AI1
+GIT_TRACE2_PARENT_SID=6da53473-ed5e-454c-86ab-a41dca698125
+CommonProgramFiles(x86)=C:\Program Files (x86)\Common Files
+WEBSTORM_VM_OPTIONS=D:\coding\win2021-2025\win2021-2025\vmoptions\webstorm.vmoptions
+OneDrive=C:\Users\Administrator\OneDrive
+CODEX_THREAD_ID=019d5739-7c22-75a0-940c-70f27b0e9b6f
+ZSH_TMUX_AUTOSTART=false
+DATASPELL_VM_OPTIONS=D:\coding\win2021-2025\win2021-2025\vmoptions\dataspell.vmoptions
+TMPDIR=C:\Users\Administrator\AppData\Local\Temp
+USERDOMAIN_ROAMINGPROFILE=CHINAMI-KBC0AI1
+GIT_CONFIG_KEY_0=safe.directory
+WEBIDE_VM_OPTIONS=D:\coding\win2021-2025\win2021-2025\vmoptions\webide.vmoptions
+CODEX_SHELL=1
+LC_CTYPE=C.UTF-8
+USERDOMAIN=CHINAMI-KBC0AI1
+PATHEXT=.COM;.EXE;.BAT;.CMD;.VBS;.VBE;.JS;.JSE;.WSF;.WSH;.MSC;.CPL
+AQUA_VM_OPTIONS=D:\coding\win2021-2025\win2021-2025\vmoptions\aqua.vmoptions
+SystemDrive=C:
+HTTPS_PROXY=socks5://127.0.0.1:10808
+DATAGRIP_VM_OPTIONS=D:\coding\win2021-2025\win2021-2025\vmoptions\datagrip.vmoptions
+TEMP=C:\Users\Administrator\AppData\Local\Temp
+LOCALAPPDATA=C:\Users\Administrator\AppData\Local
+MSYSTEM=MINGW64
+TERM=xterm-256color
+PROCESSOR_IDENTIFIER=AMD64 Family 26 Model 68 Stepping 0, AuthenticAMD
+PSModulePath=C:\Users\Administrator\Documents\WindowsPowerShell\Modules;C:\Program Files\WindowsPowerShell\Modules;C:\Windows\system32\WindowsPowerShell\v1.0\Modules
+IntelliJ IDEA=D:\coding\java\JetBrains\IntelliJ IDEA 2025.1\bin;
+ProgramData=C:\ProgramData
+LESS=
+JETBRAINS_CLIENT_VM_OPTIONS=D:\coding\win2021-2025\win2021-2025\vmoptions\jetbrains_client.vmoptions
+PROCESSOR_REVISION=4400
+Path=C:\Users\Administrator\.codex\tmp\arg0\codex-arg0Z1cgPY;C:\Program Files (x86)\VMware\VMware Workstation\bin\;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\;C:\Windows\System32\OpenSSH\;C:\Program Files\NVIDIA Corporation\NVIDIA App\NvDLISR;C:\Program Files (x86)\NVIDIA Corporation\PhysX\Common;D:\Windows Kits\10\Windows Performance Toolkit\;C:\Program Files (x86)\pcsuite\;D:\tool\XShell\;D:\tool\xftp\;D:\c++\tortoiseGit\bin;C:\Program Files\Git\cmd;C:\Program Files\nodejs\;C:\Users\Administrator\AppData\Local\Programs\Python\Python311\Scripts\;C:\Users\Administrator\AppData\Local\Programs\Python\Python311\;C:\Users\Administrator\AppData\Local\Microsoft\WindowsApps;D:\coding\anaconda;D:\coding\anaconda\Scripts;D:\coding\anaconda\Library\bin;D:\coding\java\JetBrains\IntelliJ IDEA 2025.1\bin;D:\coding\vscode\bin;C:\Users\Administrator\AppData\Roaming\npm;D:\Antigravity\bin;D:\obsidian;C:\Users\Administrator\AppData\Local\OpenAI\Codex\bin;C:\Program Files\WindowsApps\OpenAI.Codex_26.313.5234.0_x64__2p2nqsd0c76g0\app\resources
+GIT_CONFIG_VALUE_0=D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl
+PROCESSOR_LEVEL=26
+NUMBER_OF_PROCESSORS=16
+PATH=C:/Program Files/Git/mingw64/libexec/git-core;C:\Program Files\Git\mingw64\bin;C:\Program Files\Git\usr\bin;C:\Users\Administrator\bin;C:\Users\Administrator\.codex\tmp\arg0\codex-arg0Z1cgPY;C:\Program Files (x86)\VMware\VMware Workstation\bin\;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\;C:\Windows\System32\OpenSSH\;C:\Program Files\NVIDIA Corporation\NVIDIA App\NvDLISR;C:\Program Files (x86)\NVIDIA Corporation\PhysX\Common;D:\Windows Kits\10\Windows Performance Toolkit\;C:\Program Files (x86)\pcsuite\;D:\tool\XShell\;D:\tool\xftp\;D:\c++\tortoiseGit\bin;C:\Program Files\Git\cmd;C:\Program Files\nodejs\;C:\Users\Administrator\AppData\Local\Programs\Python\Python311\Scripts\;C:\Users\Administrator\AppData\Local\Programs\Python\Python311\;C:\Users\Administrator\AppData\Local\Microsoft\WindowsApps;D:\coding\anaconda;D:\coding\anaconda\Scripts;D:\coding\anaconda\Library\bin;D:\coding\java\JetBrains\IntelliJ IDEA 2025.1\bin;D:\coding\vscode\bin;C:\Users\Administrator\AppData\Roaming\npm;D:\Antigravity\bin;D:\obsidian;C:\Users\Administrator\AppData\Local\OpenAI\Codex\bin;C:\Program Files\WindowsApps\OpenAI.Codex_26.313.5234.0_x64__2p2nqsd0c76g0\app\resources
+PHPSTORM_VM_OPTIONS=D:\coding\win2021-2025\win2021-2025\vmoptions\phpstorm.vmoptions
+GIT_CONFIG_COUNT=1
+ProgramFiles(x86)=C:\Program Files (x86)
+PUBLIC=C:\Users\Public
+RUSTROVER_VM_OPTIONS=D:\coding\win2021-2025\win2021-2025\vmoptions\rustrover.vmoptions
+ZSH_TMUX_AUTOSTARTED=true
+CommonProgramFiles=C:\Program Files (x86)\Common Files
+TMP=C:\Users\Administrator\AppData\Local\Temp
+CHROME_CRASHPAD_PIPE_NAME=\\.\pipe\crashpad_9484_RYBHMWIHAZDYVDOB
+RUBYMINE_VM_OPTIONS=D:\coding\win2021-2025\win2021-2025\vmoptions\rubymine.vmoptions
+CODEX_SANDBOX_NETWORK_DISABLED=1
+PLINK_PROTOCOL=ssh
+COLORTERM=truecolor
+ProgramW6432=C:\Program Files
+GIT_PAGER=more.com
+ProgramFiles=C:\Program Files (x86)
+DEVECOSTUDIO_VM_OPTIONS=D:\coding\win2021-2025\win2021-2025\vmoptions\devecostudio.vmoptions
+AMDRMSDKPATH=C:\Program Files\AMD\RyzenMasterSDK\
+GOLAND_VM_OPTIONS=D:\coding\win2021-2025\win2021-2025\vmoptions\goland.vmoptions
+SHELL=C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+HOME=C:\Users\Administrator
+CODEX_INTERNAL_ORIGINATOR_OVERRIDE=Codex Desktop
+CommonProgramW6432=C:\Program Files\Common Files
+DISABLE_AUTO_UPDATE=true
+LOGONSERVER=\\CHINAMI-KBC0AI1
+GIT_EXEC_PATH=C:/Program Files/Git/mingw64/libexec/git-core
+SystemRoot=C:\Windows
+RIDER_VM_OPTIONS=D:\coding\win2021-2025\win2021-2025\vmoptions\rider.vmoptions
+APPDATA=C:\Users\Administrator\AppData\Roaming
+HOMEDRIVE=C:
+RUST_LOG=warn
+IDEA_VM_OPTIONS=D:\coding\win2021-2025\win2021-2025\vmoptions\idea.vmoptions
+GATEWAY_VM_OPTIONS=D:\coding\win2021-2025\win2021-2025\vmoptions\gateway.vmoptions
+CLION_VM_OPTIONS=D:\coding\win2021-2025\win2021-2025\vmoptions\clion.vmoptions
+JETBRAINSCLIENT_VM_OPTIONS=D:\coding\win2021-2025\win2021-2025\vmoptions\jetbrainsclient.vmoptions
+USERNAME=Administrator
+PROCESSOR_ARCHITEW6432=AMD64
+STUDIO_VM_OPTIONS=D:\coding\win2021-2025\win2021-2025\vmoptions\studio.vmoptions
+PROCESSOR_ARCHITECTURE=x86
+USERPROFILE=C:\Users\Administrator
+OS=Windows_NT
+ComSpec=C:\Windows\system32\cmd.exe
+PYCHARM_VM_OPTIONS=D:\coding\win2021-2025\win2021-2025\vmoptions\pycharm.vmoptions
+PAGER=more.com
+windir=C:\Windows
+OneDriveConsumer=C:\Users\Administrator\OneDrive
+ALLUSERSPROFILE=C:\ProgramData
+
+
+------------
+Diagnostic: File system
+Skipped: False
+Success: True
+Exception: None
+Log:
+Temporary directory is 'C:\Users\Administrator\AppData\Local\Temp\'...
+Checking basic file I/O...
+Writing to temporary file 'C:\Users\Administrator\AppData\Local\Temp\9ed64944b1748b3a9c577e43'... OK
+Reading from temporary file 'C:\Users\Administrator\AppData\Local\Temp\9ed64944b1748b3a9c577e43'... OK
+Deleting temporary file 'C:\Users\Administrator\AppData\Local\Temp\9ed64944b1748b3a9c577e43'... OK
+Testing IFileSystem instance...
+UserHomePath: C:\Users\CodexSandboxOffline
+UserDataDirectoryPath: C:\Users\CodexSandboxOffline\.gcm
+GetCurrentDirectory(): D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl
+
+------------
+Diagnostic: Networking
+Skipped: False
+Success: False
+Exception:
+System.Net.Http.HttpRequestException: 发送请求时出错。 ---> System.Net.WebException: 基础连接已经关闭: 接收时发生错误。 ---> System.ComponentModel.Win32Exception: 安全包中没有可用的凭证
+   在 System.Net.SSPIWrapper.AcquireCredentialsHandle(SSPIInterface SecModule, String package, CredentialUse intent, SecureCredential2 scc)
+   在 System.Net.Security.SecureChannel.AcquireCredentialsHandle(CredentialUse credUsage, SecureCredential2& secureCredential)
+   在 System.Net.Security.SecureChannel.AcquireCredentialsHandle(CredentialUse credUsage, X509Certificate2 selectedCert, Flags flags)
+   在 System.Net.Security.SecureChannel.AcquireClientCredentials(Byte[]& thumbPrint)
+   在 System.Net.Security.SecureChannel.GenerateToken(Byte[] input, Int32 offset, Int32 count, Byte[]& output)
+   在 System.Net.Security.SecureChannel.NextMessage(Byte[] incoming, Int32 offset, Int32 count)
+   在 System.Net.Security.SslState.StartSendBlob(Byte[] incoming, Int32 count, AsyncProtocolRequest asyncRequest, Boolean renegotiation)
+   在 System.Net.Security.SslState.ForceAuthentication(Boolean receiveFirst, Byte[] buffer, AsyncProtocolRequest asyncRequest, Boolean renegotiation)
+   在 System.Net.Security.SslState.ProcessAuthentication(LazyAsyncResult lazyResult)
+   在 System.Net.TlsStream.CallProcessAuthentication(Object state)
+   在 System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state, Boolean preserveSyncCtx)
+   在 System.Threading.ExecutionContext.Run(ExecutionContext executionContext, ContextCallback callback, Object state, Boolean preserveSyncCtx)
+   在 System.Threading.ExecutionContext.Run(ExecutionContext executionContext, ContextCallback callback, Object state)
+   在 System.Net.TlsStream.ProcessAuthentication(LazyAsyncResult result)
+   在 System.Net.TlsStream.BeginWrite(Byte[] buffer, Int32 offset, Int32 size, AsyncCallback asyncCallback, Object asyncState)
+   在 System.Net.TlsStream.UnsafeBeginWrite(Byte[] buffer, Int32 offset, Int32 size, AsyncCallback asyncCallback, Object asyncState)
+   在 System.Net.PooledStream.UnsafeBeginWrite(Byte[] buffer, Int32 offset, Int32 size, AsyncCallback callback, Object state)
+   在 System.Net.ConnectStream.WriteHeaders(Boolean async)
+   --- 内部异常堆栈跟踪的结尾 ---
+   在 System.Net.HttpWebRequest.EndGetResponse(IAsyncResult asyncResult)
+   在 System.Net.Http.HttpClientHandler.GetResponseCallback(IAsyncResult ar)
+   --- 内部异常堆栈跟踪的结尾 ---
+   在 System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   在 System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task)
+   在 System.Runtime.CompilerServices.TaskAwaiter`1.GetResult()
+   在 GitCredentialManager.Diagnostics.NetworkingDiagnostic.<RunInternalAsync>d__4.MoveNext()
+--- 引发异常的上一位置中堆栈跟踪的末尾 ---
+   在 System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   在 System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task)
+   在 System.Runtime.CompilerServices.TaskAwaiter`1.GetResult()
+   在 GitCredentialManager.Diagnostics.Diagnostic.<RunAsync>d__6.MoveNext()
+Log:
+Checking networking and HTTP stack...
+Creating HTTP client... OK
+IsNetworkAvailable: True
+Sending HEAD request to http://example.com...Sending HEAD request to https://example.com... OK
+
+------------
+Diagnostic: Git
+Skipped: False
+Success: True
+Exception: None
+Log:
+Getting Git version... OK
+Git version is '2.52.0.windows.1'
+Locating current repository...Git repository at 'D:/c++/project/remote_ctl/remote_ctl1/remote_ctl/remote_ctl/.git'
+ OK
+Listing all Git configuration... OK
+Git configuration:
+file:C:/Program Files/Git/etc/gitconfig	diff.astextplain.textconv=astextplain
+file:C:/Program Files/Git/etc/gitconfig	filter.lfs.clean=git-lfs clean -- %f
+file:C:/Program Files/Git/etc/gitconfig	filter.lfs.smudge=git-lfs smudge -- %f
+file:C:/Program Files/Git/etc/gitconfig	filter.lfs.process=git-lfs filter-process
+file:C:/Program Files/Git/etc/gitconfig	filter.lfs.required=true
+file:C:/Program Files/Git/etc/gitconfig	http.sslbackend=schannel
+file:C:/Program Files/Git/etc/gitconfig	core.autocrlf=true
+file:C:/Program Files/Git/etc/gitconfig	core.fscache=true
+file:C:/Program Files/Git/etc/gitconfig	core.symlinks=false
+file:C:/Program Files/Git/etc/gitconfig	pull.rebase=false
+file:C:/Program Files/Git/etc/gitconfig	credential.helper=manager
+file:C:/Program Files/Git/etc/gitconfig	credential.https://dev.azure.com.usehttppath=true
+file:C:/Program Files/Git/etc/gitconfig	init.defaultbranch=master
+file:C:/Users/Administrator/.gitconfig	credential.https://git.edoyun.com:6191.provider=generic
+file:C:/Users/Administrator/.gitconfig	user.name=cyiwen
+file:C:/Users/Administrator/.gitconfig	user.email=cyi059067@gmail.com
+file:C:/Users/Administrator/.gitconfig	fetch.prune=false
+file:.git/config	core.repositoryformatversion=0
+file:.git/config	core.filemode=false
+file:.git/config	core.bare=false
+file:.git/config	core.logallrefupdates=true
+file:.git/config	core.symlinks=false
+file:.git/config	core.ignorecase=true
+file:.git/config	remote.origin.url=https://git.edoyun.com:6191/AAPVBQPVDRX0BA9H/remote_ctl
+file:.git/config	remote.origin.fetch=+refs/heads/*:refs/remotes/origin/*
+file:.git/config	branch.main.remote=origin
+file:.git/config	branch.main.merge=refs/heads/main
+file:.git/config	tgit.commitstagingsupport=false
+file:.git/config	remote.github.url=https://github.com/hosendovebelva-boop/remoteCtrl.git
+file:.git/config	remote.github.fetch=+refs/heads/*:refs/remotes/github/*
+file:.git/config	user.name=melene
+file:.git/config	user.email=hosendovebelva@gmail.com
+command line:	safe.directory=D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl
+
+
+------------
+Diagnostic: Credential storage
+Skipped: False
+Success: True
+Exception: None
+Log:
+ICredentialStore instance is of type: CredentialStore
+Writing test credential... OK
+Reading test credential... OK
+Deleting test credential... OK
+
