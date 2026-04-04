@@ -1,24 +1,24 @@
 ﻿#pragma once
 #ifndef WM_SEND_PACK_ACK
-// 宏名称和括号之间加一个空格
+// Add a space between the macro name and parentheses
 #define WM_SEND_PACK_ACK (WM_USER + 2)  
 #endif
 
 #include "afxdialogex.h"
 
 
-// CWatchDialog 对话框
+// CWatchDialog dialog
 
 class CWatchDialog : public CDialog
 {
 	DECLARE_DYNAMIC(CWatchDialog)
 
 public:
-	CWatchDialog(CWnd* pParent = nullptr);   // 标准构造函数
+	CWatchDialog(CWnd* pParent = nullptr);   // standard constructor
 	virtual ~CWatchDialog();
 
 
-// 对话框数据
+// Dialog data
 #ifdef AFX_DESIGN_TIME
 	enum { IDD = IDD_DIG_WATCH };
 #endif
@@ -28,8 +28,8 @@ public:
 	int m_nObjHeight;
 	CImage m_image;
 protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支持
-	bool m_isFull;	// 缓存是否有数据,true有缓存,false没缓存
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
+	bool m_isFull;	// Whether the buffer contains data: true means buffered, false means empty
 	DECLARE_MESSAGE_MAP()
 public:
 	CImage& GetImage()

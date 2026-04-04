@@ -1,4 +1,4 @@
-﻿// StatusDlg.cpp: 实现文件
+﻿// StatusDlg.cpp: implementation file
 //
 
 #include "pch.h"
@@ -7,7 +7,7 @@
 #include "StatusDlg.h"
 
 
-// CStatusDlg 对话框
+// CStatusDlg dialog
 
 IMPLEMENT_DYNAMIC(CStatusDlg, CDialog)
 
@@ -32,4 +32,4 @@ BEGIN_MESSAGE_MAP(CStatusDlg, CDialog)
 END_MESSAGE_MAP()
 
 
-// CStatusDlg 消息处理程序
+// CStatusDlg message handlers

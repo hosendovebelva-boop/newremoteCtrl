@@ -7,21 +7,21 @@
 #include "EdoyunTool.h"
 #include <map>
 
-//#define WM_SEND_DATA (WM_USER+2)	// 发送数据
-#define WM_SHOW_STATUS (WM_USER+3)	// 展示状态
-#define WM_SHOW_WATCH (WM_USER+4)	// 远程监控
-#define WM_SEND_MESSAGE (WM_USER+0x1000)	// 自定义消息处理
+//#define WM_SEND_DATA (WM_USER+2)	// Send data
+#define WM_SHOW_STATUS (WM_USER+3)	// Show status
+#define WM_SHOW_WATCH (WM_USER+4)	// Remote monitor
+#define WM_SEND_MESSAGE (WM_USER+0x1000)	// Custom message handling
 
 class CClientController
 {
 public:
-	// 获取全局唯一对象
+	// Get the singleton instance
 	static CClientController* getInstance();
-	// 初始化操作
+	// Initialize
 	int InitController();
-	// 启动
+	// Start
 	int Invoke(CWnd*& pMainWnd);
-	// 更新网络服务器的地址
+	// Update the network server address
 	void UpdateAddress(int nIP, int nPort)
 	{
 		CClientSocket::getInstance()->UpdateAddress(nIP, nPort);
@@ -36,19 +36,19 @@ public:
 	}
 	
 
-	// 1 查看磁盘分区
-	// 2 查看指定目录下的文件
-	// 3 打开文件
-	// 4 下载文件
-	// 5 鼠标操作
-	// 6 发送屏幕内容
-	// 7 锁机
-	// 8 解锁
-	// 9 删除文件
-	// 1981 测试连接
-	// 返回值：状态 true 成功；false 失败
+	// 1 View drive partitions
+	// 2 View files under the specified directory
+	// 3 Open file
+	// 4 Download file
+	// 5 Mouse operation
+	// 6 Send screen content
+	// 7 Lock machine
+	// 8 Unlock machine
+	// 9 Delete file
+	// 1981 Test connection
+	// Return value: true on success; false on failure
 	bool SendCommandPacket(
-		HWND hWnd,	//数据包收到后需要应答的窗口
+		HWND hWnd,	//Window that should receive the reply after the packet arrives
 		int nCmd,
 		bool bAutoClose = true,
 		BYTE* pData = NULL,
@@ -132,16 +132,16 @@ private:
 	} MSGINFO;
 	typedef LRESULT(CClientController::* MSGFUNC)(UINT nMsg, WPARAM wParam, LPARAM lParam);
 	static std::map<UINT, MSGFUNC> m_mapFunc;
-	// UUID:确保每次创建的都是不一样的
-	CWatchDialog m_watchDlg;		// 消息包在对话框关闭之后可能会导致内存泄漏
+	// UUID: ensure each created value is unique
+	CWatchDialog m_watchDlg;		// Message packets may cause a memory leak after the dialog closes
 	CRemoteClientDlg m_remoteDlg;
 	CStatusDlg m_statusDlg;
 	HANDLE m_hThread;
 	HANDLE m_hThreadWatch;
-	bool m_isClosed;	//监视是否关闭
-	// 下载文件的远程路径
+	bool m_isClosed;	//whether monitoring is closed
+	// Remote path of the file to download
 	CString m_strRemote;
-	// 下载文件的本地保存路径
+	// Local save path of the downloaded file
 	CString m_strLocal;
 	unsigned m_nThreadID;
 	static CClientController* m_instance;
@@ -151,8 +151,8 @@ private:
 	public:
 		CHelper()
 		{
-			// 一个全局变量或者某个类的静态变量，此时初始化是先于main函数的，在main函数之前是不存在多线程的问题的
-			// 这里为什么要注销？因为它在main函数之前
+			// A global variable or a static class member is initialized before main(), so there is no multithreading issue before main()
+			// Why release it here? Because it exists before main()
 			//CClientController::getInstance();
 		}
 		~CHelper()

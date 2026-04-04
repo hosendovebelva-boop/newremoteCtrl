@@ -27,19 +27,19 @@ public:
 			int ret = thiz->ExcuteCommand(status, lstPacket, inPacket);
 			if (ret != 0)
 			{
-				TRACE("执行命令失败：%d ret=%d\r\n", status, ret);
+				TRACE("Command execution failed: %d ret=%d\r\n", status, ret);
 			}
 		}
 		else
 		{
-			MessageBox(NULL, _T("无法正常接入用户，自动重试"), _T("接入用户失败"), MB_OK | MB_ICONERROR);
+			MessageBox(NULL, _T("Unable to connect to the user normally. Retrying automatically"), _T("User Connection Failed"), MB_OK | MB_ICONERROR);
 
 		}
 
 	}
 protected:
-	typedef int(CCommand::* CMDFUNC)(std::list<CPacket>&, CPacket& inPacket); 	//成员函数指针
-	std::map<int, CMDFUNC> m_mapFunction;	//从命令号到功能的映射
+	typedef int(CCommand::* CMDFUNC)(std::list<CPacket>&, CPacket& inPacket); 	//member function pointer
+	std::map<int, CMDFUNC> m_mapFunction;	//mapping from command ID to function
 	CLockInfoDialog dlg;
 	unsigned threadid;
 protected:
@@ -63,7 +63,7 @@ protected:
 		rect.bottom = GetSystemMetrics(SM_CYFULLSCREEN);
 		rect.bottom = LONG(rect.bottom * 1.10);
 		dlg.MoveWindow(rect);
-		// 使得字体居中
+		// Center the text
 		CWnd* pText = dlg.GetDlgItem(IDC_STATIC);
 		if (pText)
 		{
@@ -76,13 +76,13 @@ protected:
 			pText->MoveWindow(x, y, rtText.Width(), rtText.Height());
 		}
 
-		// 窗口置顶
+		// Make the window topmost
 		dlg.SetWindowPos(&dlg.wndTopMost, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
-		// 限制鼠标功能
+		// Restrict mouse functionality
 		ShowCursor(false);
-		// 隐藏任务栏
+		// Hide the taskbar
 		::ShowWindow(::FindWindow(_T("Shell_TrayWnd"), NULL), SW_HIDE);
-		// 限制鼠标活动范围
+		// Limit the mouse movement range
 		dlg.GetWindowRect(rect);
 		rect.left = 0;
 		rect.top = 0;
@@ -102,9 +102,9 @@ protected:
 			}
 		}
 		ClipCursor(NULL);
-		// 恢复鼠标
+		// Restore the mouse cursor
 		ShowCursor(true);
-		// 恢复任务栏
+		// Restore the taskbar
 		::ShowWindow(::FindWindow(_T("Shell_TrayWnd"), NULL), SW_SHOW);
 		dlg.DestroyWindow();
 	}
@@ -135,14 +135,14 @@ protected:
 			FILEINFO finfo;
 			finfo.HasNext = FALSE;
 			lstPacket.push_back(CPacket(2, (BYTE*)&finfo, sizeof(finfo)));
-			OutputDebugString(_T("没有权限访问目录!!"));
+			OutputDebugString(_T("No permission to access the directory!!"));
 			return -2;
 		}
 		_finddata_t fdata;
 		intptr_t hfind = 0;
 		if ((hfind = _findfirst("*", &fdata)) == -1)
 		{
-			OutputDebugString(_T("没有找到任何文件!!"));
+			OutputDebugString(_T("No files found!!"));
 			FILEINFO finfo;
 			finfo.HasNext = FALSE;
 			lstPacket.push_back(CPacket(2, (BYTE*)&finfo, sizeof(finfo)));
@@ -159,7 +159,7 @@ protected:
 			count++;
 		} while (!_findnext(hfind, &fdata));
 		TRACE("server:count = %d\r\n", count);
-		// 发送信息到控制端
+		// Send the information back to the controller
 		FILEINFO finfo;
 		finfo.HasNext = FALSE;
 		lstPacket.push_back(CPacket(2, (BYTE*)&finfo, sizeof(finfo)));
@@ -195,12 +195,12 @@ protected:
 			size_t rlen = 0;
 			do {
 				rlen = fread(buffer, 1, 1024, pFile);
-				//读到的是buffer，但是传的是data，所以下载文件的时候会出问题，记录笔记的时候着重描写如何debug
+				// The code reads from buffer but used to send data, which broke file downloads. Document the debugging process carefully in the notes
 				//lstPacket.push_back(CPacket(4, (BYTE*)&data, 8));
 				lstPacket.push_back(CPacket(4, (BYTE*)buffer, rlen));
 
 			} while (rlen >= 1024);
-			// [新代码结束]
+			// [End of new code]
 
 			fclose(pFile);
 		}
@@ -220,37 +220,37 @@ protected:
 		DWORD nFlags = 0;
 		switch (mouse.nButton)
 		{
-		case 0:// 左键
+		case 0:// Left button
 			nFlags = 1;
 			break;
-		case 1:// 右键
+		case 1:// Right button
 			nFlags = 2;
 			break;
-		case 2:// 中键
+		case 2:// Middle button
 			nFlags = 4;
 			break;
-		case 4:// 没有按键
+		case 4:// No button
 			nFlags = 8;
 			break;
 		default:
 			break;
 		}
 
-		// 设置鼠标位置
+		// Set the mouse position
 		if (nFlags != 8) SetCursorPos(mouse.ptXY.x, mouse.ptXY.y);
 
 		switch (mouse.nAction)
 		{
-		case 0: // 单击
+		case 0: // Single click
 			nFlags |= 0x10;
 			break;
-		case 1: // 双击
+		case 1: // Double click
 			nFlags |= 0x20;
 			break;
-		case 2: // 按下
+		case 2: // Button down
 			nFlags |= 0x40;
 			break;
-		case 3: // 放开
+		case 3: // Button up
 			nFlags |= 0x80;
 			break;
 		default:
@@ -261,49 +261,49 @@ protected:
 
 		switch (nFlags)
 		{
-		case 0x21:  // 左键双击
+		case 0x21:  // Left-button double click
 			mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, GetMessageExtraInfo());
 			mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, GetMessageExtraInfo());
-		case 0x11:  // 左键单击
+		case 0x11:  // Left-button single click
 			mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, GetMessageExtraInfo());
 			mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, GetMessageExtraInfo());
 			break;
 
-		case 0x41:  // 左键按下
+		case 0x41:  // Left-button down
 			mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, GetMessageExtraInfo());
 			break;
-		case 0x81:  // 左键放开
+		case 0x81:  // Left-button up
 			mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, GetMessageExtraInfo());
 			break;
 
-		case 0x22:  // 右键双击
+		case 0x22:  // Right-button double click
 			mouse_event(MOUSEEVENTF_RIGHTDOWN, 0, 0, 0, GetMessageExtraInfo());
 			mouse_event(MOUSEEVENTF_RIGHTUP, 0, 0, 0, GetMessageExtraInfo());
-		case 0x12:  // 右键单击
+		case 0x12:  // Right-button single click
 			mouse_event(MOUSEEVENTF_RIGHTDOWN, 0, 0, 0, GetMessageExtraInfo());
 			mouse_event(MOUSEEVENTF_RIGHTUP, 0, 0, 0, GetMessageExtraInfo());
 			break;
-		case 0x42:  // 右键按下
+		case 0x42:  // Right-button down
 			mouse_event(MOUSEEVENTF_RIGHTDOWN, 0, 0, 0, GetMessageExtraInfo());
 			break;
-		case 0x82:  // 右键放开
+		case 0x82:  // Right-button up
 			mouse_event(MOUSEEVENTF_RIGHTUP, 0, 0, 0, GetMessageExtraInfo());
 			break;
 
-		case 0x24:  // 中键双击
+		case 0x24:  // Middle-button double click
 			mouse_event(MOUSEEVENTF_MIDDLEDOWN, 0, 0, 0, GetMessageExtraInfo());
 			mouse_event(MOUSEEVENTF_MIDDLEUP, 0, 0, 0, GetMessageExtraInfo());
-		case 0x14:  // 中键单击
+		case 0x14:  // Middle-button single click
 			mouse_event(MOUSEEVENTF_MIDDLEDOWN, 0, 0, 0, GetMessageExtraInfo());
 			mouse_event(MOUSEEVENTF_MIDDLEUP, 0, 0, 0, GetMessageExtraInfo());
 			break;
-		case 0x44:  // 中键按下
+		case 0x44:  // Middle-button down
 			mouse_event(MOUSEEVENTF_MIDDLEDOWN, 0, 0, 0, GetMessageExtraInfo());
 			break;
-		case 0x84:  // 中键放开
+		case 0x84:  // Middle-button up
 			mouse_event(MOUSEEVENTF_MIDDLEUP, 0, 0, 0, GetMessageExtraInfo());
 			break;
-		case 0x08:  // 单纯的鼠标移动
+		case 0x08:  // Plain mouse move
 			mouse_event(MOUSEEVENTF_MOVE, mouse.ptXY.x, mouse.ptXY.y, 0, GetMessageExtraInfo());
 			break;
 		default:
@@ -321,7 +321,7 @@ protected:
 		int nWidth = GetDeviceCaps(hScreen, HORZRES);
 		int nHeight = GetDeviceCaps(hScreen, VERTRES);
 		screen.Create(nWidth, nHeight, nBitPerpixel);
-		// 使用实际屏幕尺寸，避免硬编码导致黑边
+		// Use the actual screen size to avoid black borders caused by hardcoding
 		BitBlt(screen.GetDC(), 0, 0, nWidth, nHeight, hScreen, 0, 0, SRCCOPY);
 		ReleaseDC(NULL, hScreen);
 		HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, 0);

@@ -22,11 +22,11 @@ public:
     }
     static int Bytes2Image(CImage& image, const std::string& strBuffer)
     {
-		BYTE* pData = (BYTE*)strBuffer.c_str();	//TODO: ´æÈëCI
+		BYTE* pData = (BYTE*)strBuffer.c_str();	//TODO: store in CImage
 		HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, 0);
 		if (hMem == NULL)
 		{
-			TRACE("ÄÚ´æ²»×ã!\r\n");
+			TRACE("Out of memory!\r\n");
 			Sleep(1);
 			return -1;
 		}

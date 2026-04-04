@@ -49,7 +49,7 @@ public:
 				break;
 			}
 		}
-		// 包数据可能不全，或者包头未能全部接收到
+		// Packet data may be incomplete, or the packet header may not have been fully received
 		if (i + 4 + 2 + 2 > nSize)
 		{
 			nSize = 0;
@@ -58,7 +58,7 @@ public:
 
 		nLength = *(DWORD*)(pData + i);
 		i += 4;
-		// 包没有完全接收到，就返回，此时解析失败
+		// Return when the packet has not been fully received; parsing fails at this point
 		if (nLength + i > nSize)
 		{
 			nSize = 0;
@@ -100,7 +100,7 @@ public:
 		return *this;
 	}
 
-	int Size()	// 包数据的大小
+	int Size()	// size of the packet data
 	{
 		return nLength + 6;
 	}
@@ -123,12 +123,12 @@ public:
 	}
 
 public:
-	WORD sHead;			// 固定位 FE FF
-	DWORD nLength;		// 包长度（从控制命令开始到和校验结束）
-	WORD sCmd;			// 控制命令
-	std::string strData;// 包数据
-	WORD sSum;			// 和校验
-	std::string strOut;	// 整个包的数据
+	WORD sHead;			// fixed marker FE FF
+	DWORD nLength;		// packet length (from the control command to the checksum)
+	WORD sCmd;			// control command
+	std::string strData;// packet data
+	WORD sSum;			// checksum
+	std::string strOut;	// data of the entire packet
 };
 
 #pragma pack(pop)
@@ -141,9 +141,9 @@ typedef struct MouseEvent {
 		ptXY.x = 0;
 		ptXY.y = 0;
 	}
-	WORD nAction;	// 点击、移动、双击
-	WORD nButton;	// 左键、右键、中键
-	POINT ptXY;		// 坐标
+	WORD nAction;	// click, move, double-click
+	WORD nButton;	// left, right, middle button
+	POINT ptXY;		// coordinates
 }MOUSEEV, * PMOUSEEV;
 
 typedef struct file_info {
@@ -154,12 +154,12 @@ typedef struct file_info {
 		HasNext = TRUE;
 		memset(szFileName, 0, sizeof(szFileName));
 	}
-	// 是否有效
+	// whether valid
 	BOOL IsInvalid;
-	// 是否为目录，0 否，1 是
+	// whether it is a directory, 0 = no, 1 = yes
 	BOOL IsDirectory;
-	// 是否还有后续 0 没有 1 有
+	// whether more entries follow, 0 = no, 1 = yes
 	BOOL HasNext;
-	// 文件名
+	// file name
 	char szFileName[256];
 }FILEINFO, * PFILEINFO;

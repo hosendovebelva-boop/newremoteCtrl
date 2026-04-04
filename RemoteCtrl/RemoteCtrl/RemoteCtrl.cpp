@@ -1,4 +1,4 @@
-﻿// RemoteCtrl.cpp : 此文件包含 "main" 函数。程序执行将在此处开始并结束。
+﻿// RemoteCtrl.cpp : This file contains the "main" function. Program execution starts and ends here.
 #include "pch.h"
 #include "framework.h"
 #include "RemoteCtrl.h"
@@ -13,13 +13,13 @@
 //#define INVOKE_PATH_T _T("C:\\Windows\\system32\\RemoteCtrl.exe")
 #define INVOKE_PATH_T _T("C:\\Users\\49522\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\RemoteCtrl.exe")
 
-// 唯一的应用程序对象
+// The one and only application object
 CWinApp theApp;
 using namespace std;
-//开机启动的时候，程序的权限是跟随启动用户的
-//如果两者的权限不一致，则会爆汁程序启动失败
-//开机启动对环境变量有影响，如果依赖dll（动态库），则可能会启动失败
-//复制这些dll到system32下面
+// At startup, the program runs with the privileges of the startup user.
+// If the privilege levels do not match, the program may fail to start.
+// Startup also affects environment variables, so if the program depends on DLLs (dynamic libraries), startup may fail.
+// Copy those DLLs into system32.
 bool ChooseAutoInvoke(const CString& strPath)
 {
 	TCHAR wcsSystem[MAX_PATH] = _T("");
@@ -28,19 +28,19 @@ bool ChooseAutoInvoke(const CString& strPath)
 	{
 		return;
 	}
-	CString strInfo = _T("该程序只允许用于合法的用途!\n");
-	strInfo += _T("继续运行该程序将使得这台机器处于被监控状态！\n");
-	strInfo += _T("如果你不希望这样请点击“取消”按钮，退出程序！\n");
-	strInfo += _T("按下“是”按钮，该程序将被复制到你的机器上，并随系统启动而自动运行！\n");
-	strInfo += _T("按下“否”按钮，该程序只允许一次，不会在系统内留下任何东西！\n");
+	CString strInfo = _T("This program may only be used for lawful purposes!\n");
+	strInfo += _T("Continuing to run this program will place this machine under remote monitoring.\n");
+	strInfo += _T("If you do not want that, click \"Cancel\" to exit the program.\n");
+	strInfo += _T("Press \"Yes\" to copy this program to your machine and start it automatically with the system.\n");
+	strInfo += _T("Press \"No\" to allow this program to run only once without leaving anything on the system.\n");
 	strInfo += _T("\n");
-	int ret = MessageBox(NULL, strInfo, _T("警告"), MB_YESNOCANCEL | MB_ICONWARNING | MB_TOPMOST);
+	int ret = MessageBox(NULL, strInfo, _T("Warning"), MB_YESNOCANCEL | MB_ICONWARNING | MB_TOPMOST);
 	if (ret == IDYES)
 	{
 		//WriteRegisterTable(strPath);
 		if (!CEdoyunTool::WriteStartupDir(strPath))
 		{
-			MessageBox(NULL, _T("复制文件失败，是否权限不足？\r\n"), _T("错误"), MB_ICONERROR | MB_TOPMOST);
+			MessageBox(NULL, _T("Failed to copy the file. Is this due to insufficient privileges?\r\n"), _T("Error"), MB_ICONERROR | MB_TOPMOST);
 			return false;
 		}
 	}
@@ -63,10 +63,10 @@ int main()
 			switch (ret)
 			{
 			case -1:
-				MessageBox(NULL, _T("网络初始化异常，未能成功初始化，请检查网络状态！"), _T("网络初始化失败"), MB_OK | MB_ICONERROR);
+				MessageBox(NULL, _T("Network initialization failed. Please check the network status."), _T("Network Initialization Failed"), MB_OK | MB_ICONERROR);
 				break;
 			case -2:
-				MessageBox(NULL, _T("无法正常接入用户，自动重试"), _T("接入用户失败"), MB_OK | MB_ICONERROR);
+				MessageBox(NULL, _T("Unable to connect to the user normally. Retrying automatically."), _T("User Connection Failed"), MB_OK | MB_ICONERROR);
 				break;
 			}
 		}

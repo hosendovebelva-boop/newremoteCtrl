@@ -1,33 +1,33 @@
 ﻿
-// RemoteClientDlg.h: 头文件
+// RemoteClientDlg.h: header file
 //
 
 #pragma once
 #ifndef WM_SEND_PACK_ACK
-// 宏名称和括号之间加一个空格
+// Add a space between the macro name and parentheses
 #define WM_SEND_PACK_ACK (WM_USER + 2)  
 #endif
 #include "CClientSocket.h"
 #include "StatusDlg.h"
 
-// CRemoteClientDlg 对话框
+// CRemoteClientDlg dialog
 class CRemoteClientDlg : public CDialogEx
 {
-	// 构造
+	// Construction
 public:
-	CRemoteClientDlg(CWnd* pParent = nullptr);	// 标准构造函数
+	CRemoteClientDlg(CWnd* pParent = nullptr);	// standard constructor
 
-	// 对话框数据
+	// Dialog data
 #ifdef AFX_DESIGN_TIME
 	enum { IDD = IDD_REMOTECLIENT_DIALOG };
 #endif
 
 protected:
-	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV 支持
+	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV support
 public:
 	void LoadFileInfo();
 private:
-	bool m_isClosed;// 监视是否关闭	
+	bool m_isClosed;// whether monitoring is closed	
 private:
 	void DealCommand(WORD nCmd, const std::string& strData, LPARAM lParam);
 	void InitUIData();
@@ -38,12 +38,12 @@ private:
 	CString GetPath(HTREEITEM hTree);
 	void DeleteTreeChildrenItem(HTREEITEM hTree);
 
-	// 实现
+	// Implementation
 protected:
 	HICON m_hIcon;
 	CStatusDlg m_dlgStatus;
 
-	// 生成的消息映射函数
+	// Generated message map functions
 	virtual BOOL OnInitDialog();
 	afx_msg void OnSysCommand(UINT nID, LPARAM lParam);
 	afx_msg void OnPaint();
@@ -57,7 +57,7 @@ public:
 	CTreeCtrl m_Tree;
 	afx_msg void OnNMDblclkTreeDir(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnNMClickTreeDir(NMHDR* pNMHDR, LRESULT* pResult);
-	// 显示文件
+	// Display files
 	CListCtrl m_List;
 	afx_msg void OnNMRClickListFile(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnDownloadFile();

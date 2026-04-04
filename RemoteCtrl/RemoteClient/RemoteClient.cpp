@@ -1,5 +1,5 @@
 ﻿
-// RemoteClient.cpp: 定义应用程序的类行为。
+// RemoteClient.cpp: defines the class behavior for the application.
 //
 
 #include "pch.h"
@@ -19,34 +19,34 @@ BEGIN_MESSAGE_MAP(CRemoteClientApp, CWinApp)
 END_MESSAGE_MAP()
 
 
-// CRemoteClientApp 构造
+// CRemoteClientApp construction
 
 CRemoteClientApp::CRemoteClientApp()
 {
-	// 支持重新启动管理器
+	// Support Restart Manager
 	m_dwRestartManagerSupportFlags = AFX_RESTART_MANAGER_SUPPORT_RESTART;
 
-	// TODO: 在此处添加构造代码，新加了修改
-	// 将所有重要的初始化放置在 InitInstance 中
+	// TODO: Add construction code here; new changes were added
+	// Place all significant initialization work in InitInstance
 }
 
 
-// 唯一的 CRemoteClientApp 对象
+// The one and only CRemoteClientApp object
 
 CRemoteClientApp theApp;
 
 
-// CRemoteClientApp 初始化
+// CRemoteClientApp initialization
 
 BOOL CRemoteClientApp::InitInstance()
 {
-	// 如果应用程序存在以下情况，Windows XP 上需要 InitCommonControlsEx()
-	// 使用 ComCtl32.dll 版本 6 或更高版本来启用可视化方式，
-	//则需要 InitCommonControlsEx()。  否则，将无法创建窗口。
+	// If the application uses one of the following controls, InitCommonControlsEx() is required on Windows XP
+	// to use ComCtl32.dll version 6 or later for visual styles,
+	//InitCommonControlsEx() is required. Otherwise, the window cannot be created.
 	INITCOMMONCONTROLSEX InitCtrls;
 	InitCtrls.dwSize = sizeof(InitCtrls);
-	// 将它设置为包括所有要在应用程序中使用的
-	// 公共控件类。
+	// Set this to include all
+	// common control classes used in the application.
 	InitCtrls.dwICC = ICC_WIN95_CLASSES;
 	InitCommonControlsEx(&InitCtrls);
 
@@ -55,21 +55,21 @@ BOOL CRemoteClientApp::InitInstance()
 
 	AfxEnableControlContainer();
 
-	// 创建 shell 管理器，以防对话框包含
-	// 任何 shell 树视图控件或 shell 列表视图控件。
+	// Create the shell manager in case the dialog contains
+	// any shell tree-view controls or shell list-view controls.
 	CShellManager *pShellManager = new CShellManager;
 
-	// 激活“Windows Native”视觉管理器，以便在 MFC 控件中启用主题
+	// Activate the "Windows Native" visual manager so MFC controls can use themes
 	CMFCVisualManager::SetDefaultManager(RUNTIME_CLASS(CMFCVisualManagerWindows));
 
-	// 标准初始化
-	// 如果未使用这些功能并希望减小
-	// 最终可执行文件的大小，则应移除下列
-	// 不需要的特定初始化例程
-	// 更改用于存储设置的注册表项
-	// TODO: 应适当修改该字符串，
-	// 例如修改为公司或组织名
-	SetRegistryKey(_T("应用程序向导生成的本地应用程序"));
+	// Standard initialization
+	// If you do not use these features and want to reduce
+	// the size of the final executable, remove the following
+	// unneeded specific initialization routines
+	// Change the registry key used to store settings
+	// TODO: This string should be changed appropriately,
+	// for example, to your company or organization name
+	SetRegistryKey(_T("Local AppWizard-Generated Applications"));
 
 	CClientController::getInstance()->InitController();
 	/*CClientController controller;
@@ -80,21 +80,21 @@ BOOL CRemoteClientApp::InitInstance()
 	//INT_PTR nResponse = dlg.DoModal();
 	if (nResponse == IDOK)
 	{
-		// TODO: 在此放置处理何时用
-		//  “确定”来关闭对话框的代码
+		// TODO: Add code here to handle when the dialog is dismissed with
+		//  "OK" to close the dialog
 	}
 	else if (nResponse == IDCANCEL)
 	{
-		// TODO: 在此放置处理何时用
-		//  “取消”来关闭对话框的代码
+		// TODO: Add code here to handle when the dialog is dismissed with
+		//  "Cancel" to close the dialog
 	}
 	else if (nResponse == -1)
 	{
-		TRACE(traceAppMsg, 0, "警告: 对话框创建失败，应用程序将意外终止。\n");
-		TRACE(traceAppMsg, 0, "警告: 如果您在对话框上使用 MFC 控件，则无法 #define _AFX_NO_MFC_CONTROLS_IN_DIALOGS。\n");
+		TRACE(traceAppMsg, 0, "Warning: dialog creation failed, so the application will terminate unexpectedly.\n");
+		TRACE(traceAppMsg, 0, "Warning: If you use MFC controls in dialogs, you cannot #define _AFX_NO_MFC_CONTROLS_IN_DIALOGS.\n");
 	}
 
-	// 删除上面创建的 shell 管理器。
+	// Delete the shell manager created above.
 	if (pShellManager != nullptr)
 	{
 		delete pShellManager;
@@ -105,8 +105,8 @@ BOOL CRemoteClientApp::InitInstance()
 	ControlBarCleanUp();
 #endif
 
-	// 由于对话框已关闭，所以将返回 FALSE 以便退出应用程序，
-	//  而不是启动应用程序的消息泵。
+	// Because the dialog has been closed, FALSE is returned so the application exits,
+	//  instead of starting the application message pump.
 	return FALSE;
 }
 

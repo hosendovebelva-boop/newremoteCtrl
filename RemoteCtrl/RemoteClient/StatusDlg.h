@@ -2,23 +2,23 @@
 #include "afxdialogex.h"
 
 
-// CStatusDlg 对话框
+// CStatusDlg dialog
 
 class CStatusDlg : public CDialog
 {
 	DECLARE_DYNAMIC(CStatusDlg)
 
 public:
-	CStatusDlg(CWnd* pParent = nullptr);   // 标准构造函数
+	CStatusDlg(CWnd* pParent = nullptr);   // standard constructor
 	virtual ~CStatusDlg();
 
-// 对话框数据
+// Dialog data
 #ifdef AFX_DESIGN_TIME
 	enum { IDD = IDD_DLG_STATUS };
 #endif
 
 protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支持
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
 
 	DECLARE_MESSAGE_MAP()
 public:

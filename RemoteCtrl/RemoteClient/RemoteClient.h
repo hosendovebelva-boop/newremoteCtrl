@@ -1,18 +1,18 @@
 ﻿
-// RemoteClient.h: PROJECT_NAME 应用程序的主头文件
+// RemoteClient.h: main header file for the PROJECT_NAME application
 //
 
 #pragma once
 
 #ifndef __AFXWIN_H__
-	#error "在包含此文件之前包含 'pch.h' 以生成 PCH"
+	#error "include 'pch.h' before including this file for PCH generation"
 #endif
 
-#include "resource.h"		// 主符号
+#include "resource.h"		// main symbols
 
 
 // CRemoteClientApp:
-// 有关此类的实现，请参阅 RemoteClient.cpp
+// See RemoteClient.cpp for the implementation of this class
 //
 
 class CRemoteClientApp : public CWinApp
@@ -20,11 +20,11 @@ class CRemoteClientApp : public CWinApp
 public:
 	CRemoteClientApp();
 
-// 重写
+// Overrides
 public:
 	virtual BOOL InitInstance();
 
-// 实现
+// Implementation
 
 	DECLARE_MESSAGE_MAP()
 };

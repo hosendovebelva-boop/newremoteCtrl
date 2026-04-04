@@ -6,7 +6,7 @@ CClientSocket::CHelper CClientSocket::m_helper;
 
 CClientSocket* pclient = CClientSocket::getInstance();
 
-// 为什么在头文件中不做实现
+// Why not implement this in the header file?
 std::string GetErrInfo(int wsaErrCode)
 {
 	std::string ret;
@@ -47,18 +47,18 @@ CClientSocket::CClientSocket() :
 {
 	if (InitSockEnv() == FALSE)
 	{
-		MessageBox(NULL, _T("无法初始化套接字环境,请检查网络设置！"), _T("初始化错误！"), MB_OK | MB_ICONERROR);
+		MessageBox(NULL, _T("Unable to initialize the socket environment. Please check the network settings!"), _T("Initialization Error!"), MB_OK | MB_ICONERROR);
 		exit(0);
 	}
 	m_eventInvoke = CreateEvent(NULL, TRUE, FALSE, NULL);
 	m_hThread = (HANDLE)_beginthreadex(NULL, 0, &CClientSocket::threadEntry, this, 0, &m_nThreadID);
 	if (WaitForSingleObject(m_eventInvoke, 100) == WAIT_TIMEOUT)
 	{
-		TRACE("网络消息处理线程启动失败了！\r\n");
+		TRACE("Failed to start the network message handling thread!\r\n");
 	}
 	CloseHandle(m_eventInvoke);
 	m_buffer.resize(BUFFER_SIZE);
-	// 正确的位置
+	// Correct location
 	memset(m_buffer.data(), 0, BUFFER_SIZE);
 
 	struct
@@ -73,7 +73,7 @@ CClientSocket::CClientSocket() :
 	{
 		if (m_mapFunc.insert(std::pair<UINT, MSGFUNC>(funcs[i].message, funcs[i].func)).second == false)
 		{
-			TRACE("插入失败，消息值：%d 函数值：%08X", funcs[i].message, funcs[i].func, i);
+			TRACE("Insert failed, message value: %d function value: %08X", funcs[i].message, funcs[i].func, i);
 		}
 	}
 }
@@ -98,13 +98,13 @@ bool CClientSocket::InitSocket()
 	if (m_sock != INVALID_SOCKET)
 		CloseSocket();
 	m_sock = socket(PF_INET, SOCK_STREAM, 0);
-	//TODO: 校验
+	//TODO: checksum
 	if (m_sock == -1)
 		return false;
 	sockaddr_in serv_adr;
 	memset(&serv_adr, 0, sizeof(serv_adr));
 	serv_adr.sin_family = AF_INET;
-	// 大小端转换错误
+	// Endian conversion error
 	TRACE("addr %08X nIP %08X\r\n", inet_addr("127.0.0.1"), m_nIP);
 	serv_adr.sin_addr.s_addr = inet_addr("127.0.0.1");
 	//serv_adr.sin_addr.s_addr = nIP;
@@ -112,14 +112,14 @@ bool CClientSocket::InitSocket()
 	serv_adr.sin_port = htons(m_nPort);
 	if (serv_adr.sin_addr.s_addr == INADDR_NONE)
 	{
-		AfxMessageBox("制定的IP地址不存在！！");
+		AfxMessageBox("The specified IP address does not exist!!");
 		return false;
 	}
 	int ret = connect(m_sock, (sockaddr*)&serv_adr, sizeof(serv_adr));
 	if (ret == -1)
 	{
-		AfxMessageBox("连接失败");
-		TRACE("连接失败，%d %s\r\n", WSAGetLastError(), GetErrInfo(WSAGetLastError()).c_str());
+		AfxMessageBox("Connection failed");
+		TRACE("Connection failed, %d %s\r\n", WSAGetLastError(), GetErrInfo(WSAGetLastError()).c_str());
 		return false;
 	}
 	TRACE("socket init done!\r\n");
@@ -143,7 +143,7 @@ bool CClientSocket::SendPacket(HWND hWnd, const CPacket& pack, bool isAutoClosed
 /*
 bool CClientSocket::SendPacket(const CPacket& pack, std::list<CPacket>& lstPacks, bool isAutoClosed)
 {
-	// 发包的时候才去判断是否有效
+	// Check validity only when sending packets
 	if (m_sock == INVALID_SOCKET && m_hThread == INVALID_HANDLE_VALUE)
 	{
 		m_hThread = (HANDLE)_beginthread(&CClientSocket::threadEntry, 0, this);
@@ -229,14 +229,14 @@ unsigned CClientSocket::threadEntry(void* arg)
 //					else if (length <= 0 && index <= 0)
 //					{
 //						CloseSocket();
-//						SetEvent(head.hEvent);	// 等到服务器关闭命令之后，在通知事件完成
+//						SetEvent(head.hEvent);	// Signal the event after the server closes the command
 //						if (it0 != m_mapAutoClosed.end())
 //						{
 //							TRACE("SetEvent %d %d\r\n", head.sCmd, it0->second);
 //						}
 //						else
 //						{
-//							TRACE("异常的情况，没有对应的pair \r\n");
+//							TRACE("Unexpected case: no matching pair \r\n");
 //						}
 //						break;
 //					}
@@ -289,7 +289,7 @@ void CClientSocket::SendPack(UINT nMsg, WPARAM wParam, LPARAM lParam)
 	HWND hWnd = (HWND)lParam;
 	size_t nTemp = data.strData.size();
 	CPacket current((BYTE*)data.strData.c_str(), nTemp);
-	//定义一个消息的数据结构(数据和数据长度，模式)，回调消息的数据结构(HWND)
+	//Define the message data structure (data, data length, mode) and the callback message structure (HWND)
 	if (InitSocket() == true)
 	{
 		int ret = send(m_sock, (char*)data.strData.c_str(), (int)data.strData.size(), 0);
@@ -322,7 +322,7 @@ void CClientSocket::SendPack(UINT nMsg, WPARAM wParam, LPARAM lParam)
 				}
 				else
 				{
-					//TODO: 对方关闭了套接字/网络设备异常
+					//TODO: peer closed the socket / network device exception
 					TRACE("recv failed length %d index %d cmd %d\r\n", length, index, current.sCmd);
 					CloseSocket();
 					::SendMessage(hWnd, WM_SEND_PACK_ACK, (WPARAM)new CPacket(current.sCmd,NULL,0), 1);
@@ -332,7 +332,7 @@ void CClientSocket::SendPack(UINT nMsg, WPARAM wParam, LPARAM lParam)
 		else
 		{
 			CloseSocket();
-			//网络终止处理
+			//Handle network shutdown
 			::SendMessage(hWnd, WM_SEND_PACK_ACK, NULL, -1);
 		}
 	}

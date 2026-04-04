@@ -1,4 +1,4 @@
-﻿// LockDialog.cpp: 实现文件
+﻿// LockDialog.cpp: implementation file
 //
 
 #include "pch.h"
@@ -7,7 +7,7 @@
 #include "LockInfoDialog.h"
 
 
-// CLockInfoDialog 对话框
+// CLockInfoDialog dialog
 
 IMPLEMENT_DYNAMIC(CLockInfoDialog, CDialog)
 
@@ -31,4 +31,4 @@ BEGIN_MESSAGE_MAP(CLockInfoDialog, CDialog)
 END_MESSAGE_MAP()
 
 
-// CLockInfoDialog 消息处理程序
+// CLockInfoDialog message handlers

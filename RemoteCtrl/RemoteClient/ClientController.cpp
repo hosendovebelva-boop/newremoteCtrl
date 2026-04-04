@@ -28,27 +28,27 @@ CClientController* CClientController::getInstance()
 				MsgFuncs[i].nMsg, MsgFuncs[i].func));
 		}
 	}
-	// [原代码] return nullptr;
-	// [问题] getInstance() 创建了 m_instance 却返回 nullptr，调用方拿到空指针后
-	//        调用 InitController()，this 为 NULL，&this->m_nThreadID 变成成员偏移量 0xA08，
-	//        _beginthreadex 写入该非法地址触发写入访问权限冲突
-	// [新代码] 返回正确的单例指针
+	// [Original code] return nullptr;
+	// [Issue] getInstance() creates m_instance but returns nullptr, so the caller receives a null pointer
+	//        Calling InitController() with this == NULL turns &this->m_nThreadID into the member offset 0xA08,
+	//        _beginthreadex then writes to that invalid address and triggers an access violation
+	// [New code] Return the correct singleton pointer
 	return m_instance;
-	// [新代码结束]
+	// [End of new code]
 }
 
 
 
 int CClientController::InitController()
 {
-	// _beginthreadex: 创建工作线程
-	//   参数1 NULL                            - 安全属性, NULL 使用默认安全描述符
-	//   参数2 0                               - 栈大小, 0 表示使用默认(通常 1MB)
-	//   参数3 &CClientController::threadEntry - 线程入口函数, 必须是 static unsigned __stdcall 签名
-	//   参数4 this                            - 传给线程函数的参数, 控制器自身指针
-	//   参数5 0                               - 创建标志, 0 表示立即运行(CREATE_SUSPENDED 则挂起)
-	//   参数6 &m_nThreadID                    - 输出参数, 接收线程 ID
-	//   返回值: 成功返回线程句柄, 失败返回 0
+	// _beginthreadex: create the worker thread
+	//   Parameter 1 NULL                            - security attributes; NULL uses the default security descriptor
+	//   Parameter 2 0                               - stack size; 0 means use the default (usually 1MB)
+	//   Parameter 3 &CClientController::threadEntry - thread entry function; it must use the static unsigned __stdcall signature
+	//   Parameter 4 this                            - argument passed to the thread function; the controller instance pointer
+	//   Parameter 5 0                               - creation flags; 0 means run immediately (CREATE_SUSPENDED would suspend it)
+	//   Parameter 6 &m_nThreadID                    - output argument; receives the thread ID
+	//   Return value: returns the thread handle on success, or 0 on failure
 	m_hThread = (HANDLE)_beginthreadex(NULL, 0,
 		&CClientController::threadEntry, this, 0, &m_nThreadID);
 	m_statusDlg.Create(IDD_DLG_STATUS, &m_remoteDlg);
@@ -81,7 +81,7 @@ void CClientController::DownloadEnd()
 {
 	m_statusDlg.ShowWindow(SW_SHOW);
 	m_remoteDlg.EndWaitCursor();
-	m_remoteDlg.MessageBox(_T("下载完成！！"), _T("完成"));
+	m_remoteDlg.MessageBox(_T("Download complete!!"), _T("Completed"));
 }
 
 int CClientController::DownFile(CString strPath)
@@ -98,12 +98,12 @@ int CClientController::DownFile(CString strPath)
 			FILE* pFile = fopen(m_strLocal, "wb+");
 			if (pFile == NULL)
 			{
-				AfxMessageBox(_T("本地没有权限保存该文件，文件无法创建!"));
+				AfxMessageBox(_T("The file cannot be created because there is no local permission to save it!"));
 				return -1;
 			}
 			SendCommandPacket(m_remoteDlg, 4, false, (BYTE*)(LPCSTR)m_strRemote, m_strRemote.GetLength(), (WPARAM)pFile);
 			m_remoteDlg.BeginWaitCursor();
-			m_statusDlg.m_info.SetWindowText(_T("命令正在执行中"));
+			m_statusDlg.m_info.SetWindowText(_T("Command is being executed"));
 			m_statusDlg.ShowWindow(SW_SHOW);
 			m_statusDlg.CenterWindow(&m_remoteDlg);
 			m_statusDlg.SetActiveWindow();
@@ -137,15 +137,15 @@ void CClientController::threadWatchScreen()
 			}
 			nTick = GetTickCount64();
 			int ret = SendCommandPacket(m_watchDlg.GetSafeHwnd(), 6, true, NULL, 0);
-			//TODO:添加消息响应函数 WM_SEND_ACK
-			//TODO:控制发送频率
+			//TODO: add the WM_SEND_ACK message handler
+			//TODO: control the send frequency
 			if (ret == 1)
 			{
-				TRACE("成功发送请求图片 %08X\r\n");
+				TRACE("Successfully sent the image request %08X\r\n");
 			}
 			else
 			{
-				TRACE("获取图片失败！ret = %d \r\n", ret);
+				TRACE("Failed to get the image! ret = %d \r\n", ret);
 			}
 		}
 		Sleep(1);

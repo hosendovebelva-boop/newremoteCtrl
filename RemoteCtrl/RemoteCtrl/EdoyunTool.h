@@ -44,19 +44,19 @@ public:
 	static void ShowError()
 	{
 		LPWSTR lpMessageBuf = NULL;
-		//strerror(errno); 标准
+		//strerror(errno); standard
 		FormatMessage(
 			FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER,
 			NULL, GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPWSTR)&lpMessageBuf, 0, NULL);
 		OutputDebugString(lpMessageBuf);
-		MessageBox(NULL, lpMessageBuf, _T("发生错误"), 0);
+		MessageBox(NULL, lpMessageBuf, _T("Error occurred"), 0);
 
 		LocalFree(lpMessageBuf);
 	}
 
 	static bool RunAsAdmin()
 	{
-		//本地策略组 开启Adminstrator账户 静止空密码只能登录本地控制台
+		// In Local Security Policy, enable the Administrator account and disable the policy that restricts blank-password accounts to local console logon only
 		STARTUPINFO si = { 0 };
 		PROCESS_INFORMATION pi = { 0 };
 		TCHAR sPath[MAX_PATH] = _T("");
@@ -64,8 +64,8 @@ public:
 		BOOL ret = CreateProcessWithLogonW(_T("Administrator"), NULL, NULL, LOGON_WITH_PROFILE, NULL, sPath, CREATE_UNICODE_ENVIRONMENT, NULL, NULL, &si, &pi);
 		if (!ret)
 		{
-			ShowError();	//TODO:去除调试信息
-			MessageBox(NULL, sPath, _T("程序错误"), 0);	//TODO:去除调试信息
+			ShowError();	//TODO: remove debug information
+			MessageBox(NULL, sPath, _T("Program Error"), 0);	//TODO: remove debug information
 			return false;
 		}
 		WaitForSingleObject(pi.hProcess, INFINITE);
@@ -76,30 +76,30 @@ public:
 
 	static BOOL WriteStartupDir(const CString& strPath)
 	{
-		// 通过修改开机启动文件夹来实现开机启动
+		// Implement startup by modifying the startup folder
 		TCHAR sPath[MAX_PATH] = _T("");
 		GetModuleFileName(NULL, sPath, MAX_PATH);
 		return CopyFile(sPath, strPath, FALSE);
 		
 	}
 
-	// 开机启动的时候，程序的权限是跟随启动用户的
-	// 如果两者权限不一致，则会导致程序启动失败
-	// 开机启动对环境变量有影响，如果依赖dll（动态库），则可能启动失败
-	// 解决方法：
-	// 【复制这些dll到system32下面或者sysWOW64下面】
-	// system32下面，多是64位程序 syswow64下面多是32位程序
-	// 【使用静态库，而非动态库】
+	// At startup, the program runs with the same privileges as the startup user
+	// If the privilege levels do not match, the program may fail to start
+	// Startup also affects environment variables, so if the program depends on DLLs (dynamic libraries), startup may fail
+	// Solutions:
+	// [Copy those DLLs into system32 or sysWOW64]
+	// system32 usually contains 64-bit programs, while syswow64 usually contains 32-bit programs
+	// [Use static libraries instead of dynamic libraries]
 	static bool WriteRegisterTable(const CString& strPath)
 	{
-		// 通过修改注册表来实现开机启动
+		// Implement startup by modifying the registry
 		CString strSubKey = _T("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run");
 		TCHAR sPath[MAX_PATH] = _T("");
 		GetModuleFileName(NULL, sPath, MAX_PATH);
 		BOOL ret = CopyFile(sPath, strPath, FALSE);
 		if (ret == FALSE)
 		{
-			MessageBox(NULL, _T("复制文件失败，是否权限不足？\r\n"), _T("错误"), MB_ICONERROR | MB_TOPMOST);
+			MessageBox(NULL, _T("Failed to copy the file. Is this due to insufficient privileges?\r\n"), _T("Error"), MB_ICONERROR | MB_TOPMOST);
 			return false;
 		}
 		HKEY hKey = NULL;
@@ -107,7 +107,7 @@ public:
 		if (ret != ERROR_SUCCESS)
 		{
 			RegCloseKey(hKey);
-			MessageBox(NULL, _T("设置自动开机失败！是否因为权限不足？"), _T("错误"), MB_ICONERROR | MB_TOPMOST);
+			MessageBox(NULL, _T("Failed to configure startup at boot. Is this due to insufficient privileges?"), _T("Error"), MB_ICONERROR | MB_TOPMOST);
 			return false;
 		}
 
@@ -115,7 +115,7 @@ public:
 		if (ret != ERROR_SUCCESS)
 		{
 			RegCloseKey(hKey);
-			MessageBox(NULL, _T("设置自动开机失败！是否因为权限不足？"), _T("错误"), MB_ICONERROR | MB_TOPMOST);
+			MessageBox(NULL, _T("Failed to configure startup at boot. Is this due to insufficient privileges?"), _T("Error"), MB_ICONERROR | MB_TOPMOST);
 			return false;
 		}
 		RegCloseKey(hKey);
@@ -124,17 +124,17 @@ public:
 
 	static bool Init()
 	{
-		//用于带MFC命令行项目初始化（通用）
+		// Used to initialize MFC console applications (general-purpose)
 		HMODULE hModule = ::GetModuleHandle(nullptr);
 		if (hModule == nullptr)
 		{
-			wprintf(L"错误：GetModuleHandle 失败\n");
+			wprintf(L"Error: GetModuleHandle failed\n");
 			return false;
 		}
 		if (!AfxWinInit(hModule, nullptr, ::GetCommandLine(), 0))
 		{
-			// TODO: 在此处为应用程序的行为编写代码。
-			wprintf(L"错误: MFC 初始化失败\n");
+			// TODO: Write code for the application behavior here.
+			wprintf(L"Error: MFC initialization failed\n");
 			return false;
 		}
 		return true;

@@ -1,5 +1,5 @@
 ﻿
-// RemoteClientDlg.cpp: 实现文件
+// RemoteClientDlg.cpp: implementation file
 //
 
 #include "pch.h"
@@ -16,22 +16,22 @@
 #include "CWatchDialog.h"
 
 
-// 用于应用程序“关于”菜单项的 CAboutDlg 对话框
+// CAboutDlg dialog used for the application's About menu item
 
 class CAboutDlg : public CDialogEx
 {
 public:
 	CAboutDlg();
 
-	// 对话框数据
+	// Dialog data
 #ifdef AFX_DESIGN_TIME
 	enum { IDD = IDD_ABOUTBOX };
 #endif
 
 protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支持
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
 
-	// 实现
+	// Implementation
 protected:
 	DECLARE_MESSAGE_MAP()
 public:
@@ -51,7 +51,7 @@ BEGIN_MESSAGE_MAP(CAboutDlg, CDialogEx)
 END_MESSAGE_MAP()
 
 
-// CRemoteClientDlg 对话框
+// CRemoteClientDlg dialog
 
 
 
@@ -98,15 +98,15 @@ BEGIN_MESSAGE_MAP(CRemoteClientDlg, CDialogEx)
 END_MESSAGE_MAP()
 
 
-// CRemoteClientDlg 消息处理程序
+// CRemoteClientDlg message handlers
 
 BOOL CRemoteClientDlg::OnInitDialog()
 {
 	CDialogEx::OnInitDialog();
 
-	// 将“关于...”菜单项添加到系统菜单中。
+	// Add the "About..." menu item to the system menu.
 
-	// IDM_ABOUTBOX 必须在系统命令范围内。
+	// IDM_ABOUTBOX must be within the system command range.
 	ASSERT((IDM_ABOUTBOX & 0xFFF0) == IDM_ABOUTBOX);
 	ASSERT(IDM_ABOUTBOX < 0xF000);
 
@@ -124,9 +124,9 @@ BOOL CRemoteClientDlg::OnInitDialog()
 		}
 	}
 
-	// TODO: 在此添加额外的初始化代码
+	// TODO: Add extra initialization code here
 	InitUIData();
-	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
+	return TRUE;  // return TRUE unless the focus is set to a control
 }
 
 void CRemoteClientDlg::OnSysCommand(UINT nID, LPARAM lParam)
@@ -142,19 +142,19 @@ void CRemoteClientDlg::OnSysCommand(UINT nID, LPARAM lParam)
 	}
 }
 
-// 如果向对话框添加最小化按钮，则需要下面的代码
-//  来绘制该图标。  对于使用文档/视图模型的 MFC 应用程序，
-//  这将由框架自动完成。
+// If you add a minimize button to the dialog, the code below is required
+//  to draw that icon. For MFC applications using the document/view model,
+//  this is done automatically by the framework.
 
 void CRemoteClientDlg::OnPaint()
 {
 	if (IsIconic())
 	{
-		CPaintDC dc(this); // 用于绘制的设备上下文
+		CPaintDC dc(this); // device context used for drawing
 
 		SendMessage(WM_ICONERASEBKGND, reinterpret_cast<WPARAM>(dc.GetSafeHdc()), 0);
 
-		// 使图标在工作区矩形中居中
+		// Center the icon in the client rectangle
 		int cxIcon = GetSystemMetrics(SM_CXICON);
 		int cyIcon = GetSystemMetrics(SM_CYICON);
 		CRect rect;
@@ -162,7 +162,7 @@ void CRemoteClientDlg::OnPaint()
 		int x = (rect.Width() - cxIcon + 1) / 2;
 		int y = (rect.Height() - cyIcon + 1) / 2;
 
-		// 绘制图标
+		// Draw the icon
 		dc.DrawIcon(x, y, m_hIcon);
 	}
 	else
@@ -171,8 +171,8 @@ void CRemoteClientDlg::OnPaint()
 	}
 }
 
-//当用户拖动最小化窗口时系统调用此函数取得光标
-//显示。
+//When the user drags the minimized window, the system calls this function to get the cursor
+//to display.
 HCURSOR CRemoteClientDlg::OnQueryDragIcon()
 {
 	return static_cast<HCURSOR>(m_hIcon);
@@ -190,7 +190,7 @@ void CRemoteClientDlg::OnBnClickedBtnFileinfo()
 	int ret = CClientController::getInstance()->SendCommandPacket(GetSafeHwnd(), 1, true, NULL, 0);
 	if (ret == 0)
 	{
-		AfxMessageBox(_T("命令处理失败！！！"));
+		AfxMessageBox(_T("Command processing failed!!!"));
 		return;
 	}
 
@@ -200,10 +200,10 @@ void CRemoteClientDlg::DealCommand(WORD nCmd, const std::string& strData, LPARAM
 {
 	switch (nCmd)
 	{
-	case 1:	// 获取驱动信息
+	case 1:	// Get drive information
 		Str2Tree(strData, m_Tree);
 		break;
-	case 2:	// 获取文件信息
+	case 2:	// Get file information
 		UpdateFileInfo(*(PFILEINFO)strData.c_str(), (HTREEITEM)lParam);
 		break;
 	case 3:
@@ -219,11 +219,11 @@ void CRemoteClientDlg::DealCommand(WORD nCmd, const std::string& strData, LPARAM
 	case 7:
 	case 8:
 	case 9:
-		MessageBox("删除文件完成", "操作完成", MB_ICONINFORMATION);
+		MessageBox("File deletion completed", "Operation completed", MB_ICONINFORMATION);
 
 		break;
 	case 1981:
-		MessageBox("连接测试成功！", "连接成功", MB_ICONINFORMATION);
+		MessageBox("Connection test succeeded!", "Connection successful", MB_ICONINFORMATION);
 		break;
 	default:
 		TRACE("unknow data received! %d\r\n", nCmd);
@@ -235,10 +235,10 @@ void CRemoteClientDlg::DealCommand(WORD nCmd, const std::string& strData, LPARAM
 void CRemoteClientDlg::InitUIData()
 {
 
-	// 设置此对话框的图标。  当应用程序主窗口不是对话框时，框架将自动
-	//  执行此操作
-	SetIcon(m_hIcon, TRUE);			// 设置大图标
-	SetIcon(m_hIcon, FALSE);		// 设置小图标
+	// Set the dialog icon. When the application's main window is not a dialog, the framework automatically
+	//  performs this operation
+	SetIcon(m_hIcon, TRUE);			// Set the large icon
+	SetIcon(m_hIcon, FALSE);		// Set the small icon
 	UpdateData();
 	m_server_address = 0xC0A84D80;	// 192.168.77.128
 	m_nPort = _T("9527");
@@ -259,7 +259,7 @@ void CRemoteClientDlg::LoadFileCurrent()
 	//CClientSocket* pClient = CClientSocket::getInstance();
 
 	while (pInfo->HasNext == TRUE) {
-		// %s 为空
+		// %s is empty
 		TRACE("[%s] isdir %d\r\n", pInfo->szFileName, pInfo->IsDirectory);
 		if (!pInfo->IsDirectory)
 		{
@@ -329,7 +329,7 @@ void CRemoteClientDlg::UpdateDownloadFile(const std::string& strData, FILE* pFil
 		length = *(long long*)strData.c_str();
 		if (length == 0)
 		{
-			AfxMessageBox("文件长度为零或者无法读取文件！！！");
+			AfxMessageBox("The file length is zero or the file cannot be read!!!");
 			CClientController::getInstance()->DownloadEnd();
 		}
 	}
@@ -365,11 +365,11 @@ void CRemoteClientDlg::LoadFileInfo()
 	if (hTreeSelected == NULL)
 		return;
 
-	// [原代码] 无
-	// [问题] HitTest 获取点击项后未设置选中状态，导致 OnDownloadFile 中 GetSelectedItem() 返回 NULL 或旧项，路径拼接错误
-	// [修复] 显式设置选中状态，确保后续 GetSelectedItem() 返回正 确的项
+	// [Original code] None
+	// [Issue] HitTest gets the clicked item but does not set it selected, causing GetSelectedItem() in OnDownloadFile to return NULL or an old item and produce an incorrect path
+	// [Fix] Explicitly set the selected state so subsequent GetSelectedItem() calls return the correct item
 	m_Tree.SelectItem(hTreeSelected);
-	// [新代码结束]
+	// [End of new code]
 	DeleteTreeChildrenItem(hTreeSelected);
 	m_List.DeleteAllItems();
 	CString strPath = GetPath(hTreeSelected);
@@ -403,14 +403,14 @@ void CRemoteClientDlg::DeleteTreeChildrenItem(HTREEITEM hTree)
 
 void CRemoteClientDlg::OnNMDblclkTreeDir(NMHDR* pNMHDR, LRESULT* pResult)
 {
-	// TODO: 在此添加控件通知处理程序代码
+	// TODO: Add control notification handler code here
 	*pResult = 0;
 	LoadFileInfo();
 }
 
 void CRemoteClientDlg::OnNMClickTreeDir(NMHDR* pNMHDR, LRESULT* pResult)
 {
-	// TODO: 在此添加控件通知处理程序代码
+	// TODO: Add control notification handler code here
 	*pResult = 0;
 	LoadFileInfo();
 
@@ -419,11 +419,11 @@ void CRemoteClientDlg::OnNMClickTreeDir(NMHDR* pNMHDR, LRESULT* pResult)
 void CRemoteClientDlg::OnNMRClickListFile(NMHDR* pNMHDR, LRESULT* pResult)
 {
 	LPNMITEMACTIVATE pNMItemActivate = reinterpret_cast<LPNMITEMACTIVATE>(pNMHDR);
-	// TODO: 在此添加控件通知处理程序代码
+	// TODO: Add control notification handler code here
 	*pResult = 0;
 	CPoint ptMouse, ptList;
 	GetCursorPos(&ptMouse);
-	// 如果不加这行，无法获得鼠标坐标，右键没有反应
+	// Without this line, the mouse coordinates cannot be obtained and the right-click menu does not respond
 	ptList = ptMouse;
 	m_List.ScreenToClient(&ptList);
 	int ListSelected = m_List.HitTest(ptList);
@@ -438,10 +438,10 @@ void CRemoteClientDlg::OnNMRClickListFile(NMHDR* pNMHDR, LRESULT* pResult)
 	}
 }
 
-// 下载的时候有一个线程运行消息循环，如果下载超过了3秒，那么这个线程就会卡死 
+// A thread runs a message loop during downloads; if the download takes more than 3 seconds, that thread may hang 
 void CRemoteClientDlg::OnDownloadFile()
 {
-	// TODO: 在此添加命令处理程序代码
+	// TODO: Add command handler code here
 	int nListSelected = m_List.GetSelectionMark();
 	CString strFile = m_List.GetItemText(nListSelected, 0);
 	HTREEITEM hSelected = m_Tree.GetSelectedItem();
@@ -450,14 +450,14 @@ void CRemoteClientDlg::OnDownloadFile()
 
 	if (ret != 0)
 	{
-		MessageBox(_T("下载失败！"));
-		TRACE("下载失败 ret = %d\r\n", ret);
+		MessageBox(_T("Download failed!"));
+		TRACE("Download failed, ret = %d\r\n", ret);
 	}
 }
 
 void CRemoteClientDlg::OnDeleteFile()
 {
-	// TODO: 在此添加命令处理程序代码
+	// TODO: Add command handler code here
 	HTREEITEM hSelected = m_Tree.GetSelectedItem();
 	CString strPath = GetPath(hSelected);
 	int nSelected = m_List.GetSelectionMark();
@@ -466,15 +466,15 @@ void CRemoteClientDlg::OnDeleteFile()
 	int ret = CClientController::getInstance()->SendCommandPacket(GetSafeHwnd(), 9, true, (BYTE*)(LPCSTR)strFile, strFile.GetLength());
 	if (ret < 0)
 	{
-		AfxMessageBox("删除文件命令执行失败！！！！");
+		AfxMessageBox("Failed to execute the delete file command!!!!");
 	}
 	LoadFileCurrent();
 }
 
 void CRemoteClientDlg::OnRunFile()
 {
-	// 实现消息响应函数
-	// TODO: 在此添加命令处理程序代码
+	// Implement the message response function
+	// TODO: Add command handler code here
 	HTREEITEM hSelected = m_Tree.GetSelectedItem();
 	CString strPath = GetPath(hSelected);
 	int nSelected = m_List.GetSelectionMark();
@@ -483,7 +483,7 @@ void CRemoteClientDlg::OnRunFile()
 	int ret = CClientController::getInstance()->SendCommandPacket(GetSafeHwnd(), 3, true, (BYTE*)(LPCSTR)strFile, strFile.GetLength());
 	if (ret < 0)
 	{
-		AfxMessageBox("打开文件命令执行失败！！！！");
+		AfxMessageBox("Failed to execute the open file command!!!!");
 	}
 }
 
@@ -495,7 +495,7 @@ void CRemoteClientDlg::OnBnClickedBtnStartWatch()
 
 void CRemoteClientDlg::OnTimer(UINT_PTR nIDEvent)
 {
-	// TODO: 在此添加消息处理程序代码和/或调用默认值
+	// TODO: Add message handler code here and/or call the default handler
 
 	CDialogEx::OnTimer(nIDEvent);
 }
@@ -503,7 +503,7 @@ void CRemoteClientDlg::OnTimer(UINT_PTR nIDEvent)
 void CRemoteClientDlg::OnIpnFieldchangedIpaddressServ(NMHDR* pNMHDR, LRESULT* pResult)
 {
 	LPNMIPADDRESS pIPAddr = reinterpret_cast<LPNMIPADDRESS>(pNMHDR);
-	// TODO: 在此添加控件通知处理程序代码
+	// TODO: Add control notification handler code here
 	*pResult = 0;
 	UpdateData();
 	CClientController* pController = CClientController::getInstance();
@@ -525,7 +525,7 @@ LRESULT CRemoteClientDlg::OnSendPackAck(WPARAM wParam, LPARAM lParam)
 	}
 	else if (lParam == 1)
 	{
-		// 对方关闭了套接字
+		// The peer closed the socket
 		TRACE("socket is closed!\r\n");
 
 	}

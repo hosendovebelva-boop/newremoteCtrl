@@ -14,8 +14,8 @@ public:
 	static CServerSocket* getInstance() {
 		if (m_instance == NULL)
 		{
-			// 手动申请，手动释放：使用 new 创建的对象，其生命周期不受作用域限制。
-			// 除非你在代码中显式调用 delete m_instance;，否则它的析构函数永远不会被执行。
+			// Manual allocation and manual release: an object created with new is not limited by scope lifetime.
+			// Unless you explicitly call delete m_instance; in the code, its destructor will never be executed.
 			m_instance = new CServerSocket();
 		}
 		return m_instance;
@@ -24,9 +24,9 @@ public:
 
 	int Run(SOCKET_CALLBACK callback, void* arg, short port = 9527)
 	{
-		// 1.进度的可控性 2.对接的方便性 3.可行性评估，提早暴露风险
-		// TODO:  socket、bind、listen、accept、read、write、close
-		// 套接字结构体初始化
+		// 1. Controllable progress 2. Easier integration 3. Feasibility evaluation to expose risks early
+		// TODO: socket, bind, listen, accept, read, write, close
+		// Initialize the socket address structure
 		bool ret = InitSocket(port);
 		if (ret == false)return -1;
 		std::list<CPacket> lstPackets;
@@ -67,7 +67,7 @@ protected:
 		serv_adr.sin_family = AF_INET;
 		serv_adr.sin_addr.s_addr = INADDR_ANY;
 		serv_adr.sin_port = htons(port);
-		//绑定
+		// bind
 		if (bind(m_sock, reinterpret_cast<sockaddr*>(&serv_adr), sizeof(serv_adr)) == -1)
 			return false;
 
@@ -98,7 +98,7 @@ protected:
 		char* buffer = new char[BUFFER_SIZE];
 		if (buffer == NULL)
 		{
-			TRACE("内存不足！\r\n");
+			TRACE("Out of memory!\r\n");
 			return -2;
 		}
 		memset(buffer, 0, BUFFER_SIZE);
@@ -112,7 +112,7 @@ protected:
 				return -1;
 			}
 			TRACE("recv %d\r\n", len);
-			// TODO:处理命令
+			// TODO: handle commands
 			index += len;
 			len = index;
 			m_packet = CPacket((BYTE*)buffer, len);
@@ -128,7 +128,7 @@ protected:
 		return -1;
 	}
 
-	// 为什么Send函数不应该被删除，尽管现在还没有其他引用
+	// Why the Send function should not be removed even though nothing else references it yet
 	bool Send(const char* pData, size_t nSize)
 	{
 		if (m_client == -1)
@@ -158,7 +158,7 @@ private:
 	SOCKET m_client;
 	SOCKET m_sock;
 	CPacket m_packet;
-	// 只允许私人使用
+	// Private use only
 	CServerSocket& operator=(const CServerSocket& ss) {}
 	CServerSocket(const CServerSocket& ss)
 	{
@@ -169,7 +169,7 @@ private:
 		m_client = INVALID_SOCKET;
 		if (InitSockEnv() == FALSE)
 		{
-			MessageBox(NULL, _T("无法初始化套接字环境,请检查网络设置！"), _T("初始化错误！"), MB_OK | MB_ICONERROR);
+			MessageBox(NULL, _T("Unable to initialize the socket environment. Please check the network settings!"), _T("Initialization Error!"), MB_OK | MB_ICONERROR);
 			exit(0);
 		}
 		m_sock = socket(PF_INET, SOCK_STREAM, 0);
@@ -182,10 +182,10 @@ private:
 	BOOL InitSockEnv()
 	{
 		WSADATA data;
-		// 申请使用的 Socket 版本是 1.1
+		// Request to use Socket version 1.1
 		if (WSAStartup(MAKEWORD(1, 1), &data) != 0)
 		{
-			//TODO:返回值处理
+			//TODO: handle the return value
 			return  FALSE;
 		}
 		return TRUE;
@@ -193,7 +193,7 @@ private:
 
 	static void releaseInstance()
 	{
-		//防御性编程
+		// Defensive programming
 		if (m_instance != NULL)
 		{
 			CServerSocket* tmp = m_instance;
@@ -201,8 +201,8 @@ private:
 			delete tmp;
 		}
 	}
-	// 静态指针的特性： m_instance 是一个静态指针。
-	// 当程序退出时，操作系统会回收指针变量本身占用的 4 / 8 字节内存，但并不会顺着指针去销毁它指向的堆内存对象。
+	// Static pointer note: m_instance is a static pointer.
+	// When the program exits, the operating system reclaims the 4 / 8 bytes used by the pointer variable itself, but it does not destroy the heap object pointed to by that pointer.
 	static CServerSocket* m_instance;
 
 	class CHelper
@@ -220,5 +220,5 @@ private:
 	static CHelper m_helper;
 };
 
-// 声明一个外部的变量，这样别的文件只需要引用了此头文件就可以使用这个变量了
+// Declare an external variable so other files can use it by including this header
 extern CServerSocket server;

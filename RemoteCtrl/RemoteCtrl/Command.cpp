@@ -19,8 +19,8 @@ CCommand::CCommand() :threadid(0)
 		{1981,&CCommand::TestConnect},
 		{-1,NULL}
 	};
-	// 为什么使用映射表而不用switch case？（数量可能会变）
-	// if-else、switch-case和hash的时间复杂度是什么样的？进行对比
+	// Why use a lookup map instead of switch-case? (The number of commands may change)
+	// Compare the time complexity of if-else, switch-case, and hash lookups
 	for (int i = 0;data[i].nCmd != -1;i++)
 	{
 		m_mapFunction.insert(std::pair<int, CMDFUNC>(data[i].nCmd, data[i].func));

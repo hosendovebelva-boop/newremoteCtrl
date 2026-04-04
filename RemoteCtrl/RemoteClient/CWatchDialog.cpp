@@ -1,4 +1,4 @@
-﻿// CWatchDialog.cpp: 实现文件
+﻿// CWatchDialog.cpp: implementation file
 //
 
 #include "pch.h"
@@ -7,7 +7,7 @@
 #include "CWatchDialog.h"
 #include "ClientController.h"
 
-// CWatchDialog 对话框
+// CWatchDialog dialog
 
 IMPLEMENT_DYNAMIC(CWatchDialog, CDialog)
 
@@ -46,18 +46,18 @@ BEGIN_MESSAGE_MAP(CWatchDialog, CDialog)
 END_MESSAGE_MAP()
 
 
-// CWatchDialog 消息处理程序
-// 为什么修改为 bool isScreen 默认为 false 的时候鼠标点击事件可以正确的发送
+// CWatchDialog message handlers
+// Why do mouse click events send correctly when bool isScreen defaults to false?
 CPoint CWatchDialog::UserPoint2RemoteScreenPoint(CPoint& point, bool isScreen = false)
 {
 	CRect clientRect;
 	if (!isScreen)
 	{
-		ClientToScreen(&point);		// 转换为相对屏幕左上角的坐标（屏幕内的绝对坐标）
+		ClientToScreen(&point);		// Convert to coordinates relative to the upper-left corner of the screen (absolute screen coordinates)
 	}
-	m_picture.ScreenToClient(&point);	// 全局坐标到客户区域坐标
+	m_picture.ScreenToClient(&point);	// Convert global coordinates to client-area coordinates
 	TRACE("x=%d y=%d \r\n", point.x, point.y);
-	// 本地坐标，到远程坐标
+	// Map local coordinates to remote coordinates
 	m_picture.GetWindowRect(clientRect);
 	TRACE("x=%d y=%d \r\n", clientRect.Width(), clientRect.Height());
 	return CPoint(point.x * m_nObjWidth / clientRect.Width(), point.y * m_nObjHeight / clientRect.Height());
@@ -68,15 +68,15 @@ BOOL CWatchDialog::OnInitDialog()
 	CDialog::OnInitDialog();
 
 	m_isFull = false;
-	// TODO:  在此添加额外的初始化
+	// TODO: Add extra initialization here
 	// SetTimer(0, 45, NULL);
 	return TRUE;  // return TRUE unless you set the focus to a control
-	// 异常: OCX 属性页应返回 FALSE
+	// Exception: OCX property pages should return FALSE
 }
 
 void CWatchDialog::OnTimer(UINT_PTR nIDEvent)
 {
-	// TODO: 在此添加消息处理程序代码和/或调用默认值
+	// TODO: Add message handler code here and/or call the default handler
 	//if (nIDEvent == 0)
 	//{
 	//	CClientController* pParent = CClientController::getInstance();
@@ -89,7 +89,7 @@ void CWatchDialog::OnTimer(UINT_PTR nIDEvent)
 
 	//		m_image.StretchBlt(
 	//			m_picture.GetDC()->GetSafeHdc(), 0, 0, rect.Width(), rect.Height(), SRCCOPY);
-	//		// 此时ifFull还是没能进入判断
+	//		// ifFull still does not enter the condition at this point
 	//		m_picture.InvalidateRect(NULL);
 	//		m_image.Destroy();
 	//		m_isFull = false;
@@ -103,11 +103,11 @@ LRESULT CWatchDialog::OnSendPackAck(WPARAM wParam, LPARAM lParam)
 {
 	if (lParam == -1 || (lParam == -2))
 	{
-		//TODO:错误处理
+		//TODO: handle errors
 	}
 	else if (lParam == 1)
 	{
-		// 对方关闭了套接字
+		// The peer closed the socket
 	}
 	else
 	{
@@ -131,9 +131,9 @@ LRESULT CWatchDialog::OnSendPackAck(WPARAM wParam, LPARAM lParam)
 
 				m_image.StretchBlt(
 					m_picture.GetDC()->GetSafeHdc(), 0, 0, rect.Width(), rect.Height(), SRCCOPY);
-				// 此时ifFull还是没能进入判断
+				// ifFull still does not enter the condition at this point
 				m_picture.InvalidateRect(NULL);
-				TRACE("更新图片完成%d %d %08X\r\n", m_nObjWidth, m_nObjHeight, (HBITMAP)m_image);
+				TRACE("Image update completed %d %d %08X\r\n", m_nObjWidth, m_nObjHeight, (HBITMAP)m_image);
 				m_image.Destroy();
 				break;
 			}
@@ -152,13 +152,13 @@ void CWatchDialog::OnLButtonDblClk(UINT nFlags, CPoint point)
 {
 	if ((m_nObjWidth != -1) && (m_nObjHeight != -1))
 	{
-		// 坐标转换
+		// Coordinate conversion
 		CPoint remote = UserPoint2RemoteScreenPoint(point);
-		//封装
+		//Pack the event
 		MOUSEEV event;
 		event.ptXY = remote;
-		event.nButton = 0;	//左键
-		event.nAction = 2;	//双击
+		event.nButton = 0;	// Left button
+		event.nAction = 2;	// Double click
 		CClientController::getInstance()->SendCommandPacket(GetSafeHwnd(), 5, true, (BYTE*)&event, sizeof(event));
 	}
 	CDialog::OnLButtonDblClk(nFlags, point);
@@ -169,15 +169,15 @@ void CWatchDialog::OnLButtonDown(UINT nFlags, CPoint point)
 	if ((m_nObjWidth != -1) && (m_nObjHeight != -1))
 	{
 		TRACE("x=%d y=%d\r\n", point.x, point.y);
-		// 坐标转换
+		// Coordinate conversion
 		CPoint remote = UserPoint2RemoteScreenPoint(point);
 		TRACE("x=%d y=%d\r\n", point.x, point.y);
 		TRACE("remote:%d %d\r\n", remote.x, remote.y);
-		//封装
+		//Pack the event
 		MOUSEEV event;
 		event.ptXY = remote;
-		event.nButton = 0;	//左键
-		event.nAction = 2;	//按下
+		event.nButton = 0;	// Left button
+		event.nAction = 2;	// Button down
 		CClientController::getInstance()->SendCommandPacket(GetSafeHwnd(), 5, true, (BYTE*)&event, sizeof(event));
 
 	}
@@ -188,13 +188,13 @@ void CWatchDialog::OnLButtonUp(UINT nFlags, CPoint point)
 {
 	if ((m_nObjWidth != -1) && (m_nObjHeight != -1))
 	{
-		// 坐标转换
+		// Coordinate conversion
 		CPoint remote = UserPoint2RemoteScreenPoint(point);
-		//封装
+		//Pack the event
 		MOUSEEV event;
 		event.ptXY = remote;
-		event.nButton = 0;	//左键
-		event.nAction = 3;	//弹起
+		event.nButton = 0;	// Left button
+		event.nAction = 3;	// Button up
 		CClientController::getInstance()->SendCommandPacket(GetSafeHwnd(), 5, true, (BYTE*)&event, sizeof(event));
 
 	}
@@ -205,13 +205,13 @@ void CWatchDialog::OnRButtonDblClk(UINT nFlags, CPoint point)
 {
 	if ((m_nObjWidth != -1) && (m_nObjHeight != -1))
 	{
-		// 坐标转换
+		// Coordinate conversion
 		CPoint remote = UserPoint2RemoteScreenPoint(point);
-		//封装
+		//Pack the event
 		MOUSEEV event;
 		event.ptXY = remote;
-		event.nButton = 1;	//左键
-		event.nAction = 1;	//双击
+		event.nButton = 1;	// Right button
+		event.nAction = 1;	// Double click
 		CClientController::getInstance()->SendCommandPacket(GetSafeHwnd(), 5, true, (BYTE*)&event, sizeof(event));
 
 	}
@@ -222,13 +222,13 @@ void CWatchDialog::OnRButtonDown(UINT nFlags, CPoint point)
 {
 	if ((m_nObjWidth != -1) && (m_nObjHeight != -1))
 	{
-		// 坐标转换
+		// Coordinate conversion
 		CPoint remote = UserPoint2RemoteScreenPoint(point);
-		//封装
+		//Pack the event
 		MOUSEEV event;
 		event.ptXY = remote;
-		event.nButton = 1;	//左键
-		event.nAction = 2;	//按下
+		event.nButton = 1;	// Right button
+		event.nAction = 2;	// Button down
 		CClientController::getInstance()->SendCommandPacket(GetSafeHwnd(), 5, true, (BYTE*)&event, sizeof(event));
 
 	}
@@ -239,13 +239,13 @@ void CWatchDialog::OnRButtonUp(UINT nFlags, CPoint point)
 {
 	if ((m_nObjWidth != -1) && (m_nObjHeight != -1))
 	{
-		// 坐标转换
+		// Coordinate conversion
 		CPoint remote = UserPoint2RemoteScreenPoint(point);
-		//封装
+		//Pack the event
 		MOUSEEV event;
 		event.ptXY = remote;
-		event.nButton = 1;	//左键
-		event.nAction = 3;	//弹起
+		event.nButton = 1;	// Right button
+		event.nAction = 3;	// Button up
 		CClientController::getInstance()->SendCommandPacket(GetSafeHwnd(), 5, true, (BYTE*)&event, sizeof(event));
 
 	}
@@ -256,13 +256,13 @@ void CWatchDialog::OnMouseMove(UINT nFlags, CPoint point)
 {
 	if ((m_nObjWidth != -1) && (m_nObjHeight != -1))
 	{
-		// 坐标转换
+		// Coordinate conversion
 		CPoint remote = UserPoint2RemoteScreenPoint(point);
-		//封装
+		//Pack the event
 		MOUSEEV event;
 		event.ptXY = remote;
-		event.nButton = 8;	//没有按键
-		event.nAction = 0;	//移动
+		event.nButton = 8;	// No button
+		event.nAction = 0;	// Move
 		CClientController::getInstance()->SendCommandPacket(GetSafeHwnd(), 5, true, (BYTE*)&event, sizeof(event));
 
 	}
@@ -276,13 +276,13 @@ void CWatchDialog::OnStnClickedWatch()
 		CPoint point;
 		GetCursorPos(&point);
 
-		// 坐标转换
+		// Coordinate conversion
 		CPoint remote = UserPoint2RemoteScreenPoint(point, true);
-		//封装
+		//Pack the event
 		MOUSEEV event;
 		event.ptXY = remote;
-		event.nButton = 0;	//左键
-		event.nAction = 0;	//单击
+		event.nButton = 0;	// Left button
+		event.nAction = 0;	// Single click
 		CClientController::getInstance()->SendCommandPacket(GetSafeHwnd(), 5, true, (BYTE*)&event, sizeof(event));
 
 	}
@@ -290,7 +290,7 @@ void CWatchDialog::OnStnClickedWatch()
 
 void CWatchDialog::OnOK()
 {
-	// TODO: 在此添加专用代码和/或调用基类
+	// TODO: Add specialized code here and/or call the base class
 
 	//CDialog::OnOK();
 }

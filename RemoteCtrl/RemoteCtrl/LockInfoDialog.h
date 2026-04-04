@@ -2,23 +2,23 @@
 #include "afxdialogex.h"
 
 
-// CLockDialog 对话框
+// CLockDialog dialog
 
 class CLockInfoDialog : public CDialog
 {
 	DECLARE_DYNAMIC(CLockInfoDialog)
 
 public:
-	CLockInfoDialog(CWnd* pParent = nullptr);   // 标准构造函数
+	CLockInfoDialog(CWnd* pParent = nullptr);   // standard constructor
 	virtual ~CLockInfoDialog();
 
-// 对话框数据
+// Dialog data
 #ifdef AFX_DESIGN_TIME
 	enum { IDD = IDD_DIALOG_INFO };
 #endif
 
 protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支持
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
 
 	DECLARE_MESSAGE_MAP()
 };
