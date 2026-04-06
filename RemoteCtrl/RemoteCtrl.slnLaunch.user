@@ -1,0 +1,15 @@
+﻿[
+  {
+    "Name": "New launch profile",
+    "Projects": [
+      {
+        "Path": "RemoteCtrl\\RemoteCtrl.vcxproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "RemoteClient\\RemoteClient.vcxproj",
+        "Action": "Start"
+      }
+    ]
+  }
+]
