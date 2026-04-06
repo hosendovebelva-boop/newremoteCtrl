@@ -5,6 +5,7 @@
 #include "ServerSocket.h"
 #include "EdoyunTool.h"
 #include "Command.h"
+#include <conio.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -26,7 +27,7 @@ bool ChooseAutoInvoke(const CString& strPath)
 	//CString strPath = CString();
 	if (PathFileExists(strPath))
 	{
-		return;
+		return true;
 	}
 	CString strInfo = _T("This program may only be used for lawful purposes!\n");
 	strInfo += _T("Continuing to run this program will place this machine under remote monitoring.\n");
@@ -51,9 +52,120 @@ bool ChooseAutoInvoke(const CString& strPath)
 	return true;
 }
 
+#define IOCP_LIST_EMPTY 0
+#define IOCP_LIST_PUSH 1
+#define IOCP_LIST_POP 2
+
+enum
+{
+	IocpListEmpty,
+	IocpListPush,
+	IocpListPop
+};
+
+typedef struct IocpParam
+{
+	int nOperator;			//operator
+	std::string strData;	//data
+	_beginthread_proc_type cbFunc;	//callback
+	IocpParam(int op, const char* sData, _beginthread_proc_type cb = NULL)
+	{
+		nOperator = op;
+		strData = sData;
+		cbFunc = cb;
+	}
+	IocpParam()
+	{
+		nOperator = -1;
+	}
+}IOCP_PARAM;
+
+void threadQueueEntry(HANDLE hIOCP)
+{
+	std::list<std::string> lstString;
+	DWORD dwTransferred = 0;
+	ULONG_PTR CompletionKey = 0;
+	OVERLAPPED* pOverlapped = NULL;
+	while (GetQueuedCompletionStatus(hIOCP, &dwTransferred, &CompletionKey, &pOverlapped, INFINITE))
+	{
+		if (dwTransferred == 0 || (CompletionKey == NULL))
+		{
+			printf("thread is prepare to exit!\r\n");
+			break;
+		}
+		IOCP_PARAM* pParam = (IOCP_PARAM*)CompletionKey;
+		if (pParam->nOperator == IocpListPush)
+		{
+			lstString.push_back(pParam->strData);
+		}
+		else if (pParam->nOperator == IocpListPop)
+		{
+			std::string* pStr = NULL;
+			if (lstString.size() > 0)
+			{
+				pStr = new std::string(lstString.front());
+				lstString.pop_front();
+			}
+			if (pParam->cbFunc)
+			{
+				pParam->cbFunc(pStr);
+			}
+		}
+		else if (pParam->nOperator == IocpListEmpty)
+		{
+			lstString.clear();
+		}
+		delete pParam;
+	}
+	_endthread();
+}
+
+void func(void* arg)
+{
+	std::string* pstr = (std::string*)arg;
+	if (pstr != NULL)
+	{
+		printf("pop from list:%s \r\n",arg);
+		delete pstr;
+	}
+	else
+	{
+		printf("list is empty,no data!\r\n");
+	}
+	
+}
+
 int main()
 {
-	if (CEdoyunTool::IsAdmin())
+	if (!CEdoyunTool::Init()) return 1;
+	printf("press any key to exit...\r\n");
+	HANDLE hIOCP = INVALID_HANDLE_VALUE;	// IO Completion Port
+	hIOCP = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, NULL, 1);	//The first distinguishing feature of epoll
+	HANDLE hThread = (HANDLE)_beginthread(threadQueueEntry, 0, hIOCP);
+
+	ULONGLONG tick = GetTickCount64();
+	while (_kbhit() != 0)	//Core:The completion port separates the request from the implementation.
+	{
+		if (GetTickCount64() - tick > 1300)
+		{
+			PostQueuedCompletionStatus(hIOCP, sizeof(IOCP_PARAM), (ULONG_PTR)new IOCP_PARAM(1, "hello world"), NULL);
+		}
+		if (GetTickCount64() - tick > 2000)
+		{
+			PostQueuedCompletionStatus(hIOCP, sizeof(IOCP_PARAM), (ULONG_PTR)new IOCP_PARAM(1, "hello world"), NULL);
+			tick = GetTickCount64();
+		}
+		Sleep(1);
+	}
+	if (hIOCP != NULL)
+	{
+		PostQueuedCompletionStatus(hIOCP, 0, NULL, NULL);
+		WaitForSingleObject(hIOCP, INFINITE);
+	}
+	CloseHandle(hIOCP);
+	printf("exit done!\r\n");
+	::exit(0);
+	/*if (CEdoyunTool::IsAdmin())
 	{
 		if (!CEdoyunTool::Init()) return 1;
 		if (ChooseAutoInvoke(INVOKE_PATH_T))
@@ -79,5 +191,5 @@ int main()
 			return 1;
 		}
 	}
-	return 0;
+	return 0;*/
 }
