@@ -80,12 +80,13 @@ typedef struct IocpParam
 	}
 }IOCP_PARAM;
 
-void threadQueueEntry(HANDLE hIOCP)
+void threadmain(HANDLE hIOCP)
 {
 	std::list<std::string> lstString;
 	DWORD dwTransferred = 0;
 	ULONG_PTR CompletionKey = 0;
 	OVERLAPPED* pOverlapped = NULL;
+	int count = 0, count0 = 0, total = 0;
 	while (GetQueuedCompletionStatus(hIOCP, &dwTransferred, &CompletionKey, &pOverlapped, INFINITE))
 	{
 		if (dwTransferred == 0 || (CompletionKey == NULL))
@@ -97,27 +98,40 @@ void threadQueueEntry(HANDLE hIOCP)
 		if (pParam->nOperator == IocpListPush)
 		{
 			lstString.push_back(pParam->strData);
+			printf("push size %d %p\r\n", lstString.size(), pOverlapped);
+			count0++;
 		}
 		else if (pParam->nOperator == IocpListPop)
 		{
-			std::string* pStr = NULL;
+			printf("%p size=%d \r\n", pParam->cbFunc, lstString.size());
+			std::string str;
 			if (lstString.size() > 0)
 			{
-				pStr = new std::string(lstString.front());
+				str = lstString.front();
 				lstString.pop_front();
 			}
 			if (pParam->cbFunc)
 			{
-				pParam->cbFunc(pStr);
+				pParam->cbFunc(&str);
 			}
+			count++;
+
 		}
 		else if (pParam->nOperator == IocpListEmpty)
 		{
 			lstString.clear();
 		}
 		delete pParam;
+		printf("total %d\r\n", ++total);
 	}
-	_endthread();
+	lstString.clear();
+	printf("thread exit count %d count0 %d \r\n", count, count0);
+}
+
+void threadQueueEntry(HANDLE hIOCP)
+{
+	threadmain(hIOCP);
+	_endthread();	//The code stops here, which will prevent the local object from being able to call the destructor, thereby causing memory leakage.
 }
 
 void func(void* arg)
@@ -125,14 +139,14 @@ void func(void* arg)
 	std::string* pstr = (std::string*)arg;
 	if (pstr != NULL)
 	{
-		printf("pop from list:%s \r\n",arg);
-		delete pstr;
+		printf("pop from list:%s \r\n", pstr->c_str());
+		//delete pstr;
 	}
 	else
 	{
 		printf("list is empty,no data!\r\n");
 	}
-	
+
 }
 
 int main()
@@ -141,19 +155,30 @@ int main()
 	printf("press any key to exit...\r\n");
 	HANDLE hIOCP = INVALID_HANDLE_VALUE;	// IO Completion Port
 	hIOCP = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, NULL, 1);	//The first distinguishing feature of epoll
+	if (hIOCP == INVALID_HANDLE_VALUE || (hIOCP == NULL))
+	{
+		printf("create iocp failed!%d\r\n", GetLastError());
+		return 1;
+	}
 	HANDLE hThread = (HANDLE)_beginthread(threadQueueEntry, 0, hIOCP);
 
 	ULONGLONG tick = GetTickCount64();
-	while (_kbhit() != 0)	//Core:The completion port separates the request from the implementation.
+	ULONGLONG tick0 = GetTickCount64();
+	int count = 0, count0 = 0;
+	// This bug is bound to happen, and it will seriously affect the program.
+	while (_kbhit() == 0)	//Core:The completion port separates the request from the implementation.
 	{
-		if (GetTickCount64() - tick > 1300)
+		if (GetTickCount64() - tick0 > 1300)
 		{
-			PostQueuedCompletionStatus(hIOCP, sizeof(IOCP_PARAM), (ULONG_PTR)new IOCP_PARAM(1, "hello world"), NULL);
+			PostQueuedCompletionStatus(hIOCP, sizeof(IOCP_PARAM), (ULONG_PTR)new IOCP_PARAM(1, "hello world", func), NULL);
+			tick0 = GetTickCount64();
+
 		}
 		if (GetTickCount64() - tick > 2000)
 		{
 			PostQueuedCompletionStatus(hIOCP, sizeof(IOCP_PARAM), (ULONG_PTR)new IOCP_PARAM(1, "hello world"), NULL);
 			tick = GetTickCount64();
+			count0++;
 		}
 		Sleep(1);
 	}
@@ -163,7 +188,7 @@ int main()
 		WaitForSingleObject(hIOCP, INFINITE);
 	}
 	CloseHandle(hIOCP);
-	printf("exit done!\r\n");
+	printf("exit done!count=%d count0=%d\r\n", count, count0);
 	::exit(0);
 	/*if (CEdoyunTool::IsAdmin())
 	{
