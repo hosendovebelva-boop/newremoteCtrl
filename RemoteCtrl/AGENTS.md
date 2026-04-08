@@ -8,6 +8,7 @@
 
 Shared build scaffolding such as `pch.h`, `framework.h`, `.rc`, and `resource.h` stays inside each project directory. Top-level design artifacts (`*.mdj`, project notes, screenshots) are reference material, not runtime code.
 
+
 ## Build, Test, and Development Commands
 Use Visual Studio 2022 with the `v143` toolset and Windows SDK 10.0.
 
@@ -42,3 +43,8 @@ Pull requests should include:
 - manual verification steps
 - screenshots for UI or dialog changes
 - linked issue or design note when available
+
+## File Location Link Output Template
+- Standard clickable format: `[absolute_path:line_number](/absolute_path#Lline_number)`; Example: `[{{ABS_PATH}}:{{LINE}}](/{{ABS_PATH}}#L{{LINE}})`
+- Path requirements: Absolute path, use `/`, no quotes.
+
