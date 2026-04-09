@@ -46,18 +46,21 @@ public:
 		{
 			m_hThread = (HANDLE)_beginthread(
 				&CEdoyunQueue<T>::threadEntry,
-				0, m_hCompletionPort);
+				0, this);
 		}
 	}
 	~CEdoyunQueue()
 	{
 		if (m_lock)return;
 		m_lock = true;
-		HANDLE hTemp = m_hCompletionPort;
 		PostQueuedCompletionStatus(m_hCompletionPort, 0, NULL, NULL);
 		WaitForSingleObject(m_hThread, INFINITE);
-		m_hCompletionPort = NULL;
-		CloseHandle(hTemp);
+		if (m_hCompletionPort != NULL)
+		{
+			HANDLE hTemp = m_hCompletionPort;
+			m_hCompletionPort = NULL;
+			CloseHandle(hTemp);
+		}
 	}
 	bool PushBack(const T& data)
 	{
@@ -71,6 +74,7 @@ public:
 			(ULONG_PTR)pParam, NULL);
 		if (ret == false)
 			delete pParam;
+		//printf("push back done %d %08p\r\n", ret, (void*)pParam);
 		return ret;
 	}
 	bool PopFront(T& data)
@@ -134,6 +138,8 @@ public:
 			(ULONG_PTR)pParam, NULL);
 		if (ret == false)
 			delete pParam;
+		//printf("Clear %08p\r\n", (void*)pParam);
+
 		return ret;
 	}
 private:
@@ -150,6 +156,7 @@ private:
 		case EQPush:
 			m_lstData.push_back(pParam->Data);
 			delete pParam;
+			//printf("delete %08p\r\n", (void*)pParam);
 			break;
 		case EQPop:
 			if (m_lstData.size() > 0)
@@ -172,6 +179,7 @@ private:
 		case EQClear:
 			m_lstData.clear();
 			delete pParam;
+			//printf("delete %08p\r\n", (void*)pParam);
 			break;
 		default:
 			OutputDebugStringA("unkown operator!\r\n");
@@ -212,10 +220,14 @@ private:
 				printf("thread is prepare to exit!\r\n");
 				continue;
 			}
+			printf("%08X\r\n", pParam);
 			pParam = (PPARAM*)CompletionKey;
+			printf("%08X\r\n", pParam);
 			DealParam(pParam);
 		}
-		CloseHandle(m_hCompletionPort);
+		HANDLE hTemp = m_hCompletionPort;
+		m_hCompletionPort = NULL;
+		CloseHandle(hTemp);
 	}
 private:
 	std::list<T> m_lstData;
