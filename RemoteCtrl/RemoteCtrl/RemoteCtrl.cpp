@@ -150,34 +150,78 @@ void func(void* arg)
 
 }
 
-int main()
+// Performance testing
+void test()
 {
-	if (!CEdoyunTool::Init()) return 1;
-	printf("press any key to exit...\r\n");
+	//The push performance of CEdoyunQueue is excellent, while the pop performance is only one quarter of that.
+	//The performance of list push is lower than that of pop.
 	CEdoyunQueue<std::string> lstStrings;
-	ULONGLONG tick0 = GetTickCount(), tick = GetTickCount64();
-	// This bug is bound to happen, and it will seriously affect the program.
-	while (_kbhit() == 0)	//Core:The completion port separates the request from the implementation.
+	ULONGLONG tick0 = GetTickCount64(), tick = GetTickCount64(), total = GetTickCount64();
+
+	while (GetTickCount64() - total <= 1000)	//Core:The completion port separates the request from the implementation.
 	{
-		if (GetTickCount64() - tick0 > 1300)
+		// This bug is bound to happen, and it will seriously affect the program.
+		//if (GetTickCount64() - tick0 >= 5)
 		{
 			lstStrings.PushBack("hello world");
 			tick0 = GetTickCount64();
 		}
-		if (GetTickCount64() - tick > 2000)
+		//Sleep(1);
+
+	}
+	size_t count = lstStrings.Size();
+	printf("lstStrings done!size %d\r\n", count);
+	total = GetTickCount64();
+	while (GetTickCount64() - total <= 1000)	//Core:The completion port separates the request from the implementation.
+	{
+		//if (GetTickCount64() - tick >= 5)
 		{
 			std::string str;
 			lstStrings.PopFront(str);
 			tick = GetTickCount64();
-			printf("pop from queue:%s\r\n", str.c_str());
+			//printf("pop from queue:%s\r\n", str.c_str());
 		}
-		Sleep(1);
+		//Sleep(1);
 	}
-	
-	printf("exit done!size=%d\r\n", lstStrings.Size());
+
+	printf("lstStrings done!size=%d\r\n", count - lstStrings.Size());
 	lstStrings.Clear();
-	printf("exit done!size=%d\r\n", lstStrings.Size());
-	::exit(0);
+	std::list<std::string> lstData;
+	total = GetTickCount64();
+	while (GetTickCount64() - total <= 1000)
+	{
+		lstData.push_back("hello world!");
+	}
+	count = lstData.size();
+	printf("lstData push done!size = =%d\r\n", lstData.size());
+	total = GetTickCount64();
+	while (GetTickCount64() - total <= 250)
+	{
+		if (lstData.size() > 0)
+		{
+			lstData.pop_front();
+		}
+	}
+	printf("exit pop done!size=%d\r\n", (count - lstStrings.Size()) * 4);
+}
+
+/*
+1. Bug testing / Function testing
+2. Testing of critical factors (memory leakage, stability of operation, conditional conditions)
+3. Stress testing (reliability testing)
+4. Performance testing
+*/
+
+int main()
+{
+	if (!CEdoyunTool::Init()) return 1;
+
+	//printf("press any key to exit... \r\n");
+	for (int i = 0;i < 100;i++)
+	{
+		test();
+	}
+
 	/*if (CEdoyunTool::IsAdmin())
 	{
 		if (!CEdoyunTool::Init()) return 1;
