@@ -1,4 +1,27 @@
-﻿  RemoteCtrl.cpp
+﻿  Command.cpp
+  EdoyunTool.cpp
+  LockInfoDialog.cpp
+  RemoteCtrl.cpp
+D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\EdoyunTool.h(12,27): warning C4305: “参数”: 从“int”到“_Elem”截断
+D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\EdoyunTool.h(12,27): warning C4305:         with
+D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\EdoyunTool.h(12,27): warning C4305:         [
+D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\EdoyunTool.h(12,27): warning C4305:             _Elem=char
+D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\EdoyunTool.h(12,27): warning C4305:         ]
+  (编译源文件“/Command.cpp”)
+  
+D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\EdoyunTool.h(12,27): warning C4309: “参数”: 截断常量值
+  (编译源文件“/Command.cpp”)
+  
+D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\EdoyunTool.h(12,27): warning C4305: “参数”: 从“int”到“_Elem”截断
+D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\EdoyunTool.h(12,27): warning C4305:         with
+D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\EdoyunTool.h(12,27): warning C4305:         [
+D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\EdoyunTool.h(12,27): warning C4305:             _Elem=char
+D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\EdoyunTool.h(12,27): warning C4305:         ]
+  (编译源文件“/EdoyunTool.cpp”)
+  
+D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\EdoyunTool.h(12,27): warning C4309: “参数”: 截断常量值
+  (编译源文件“/EdoyunTool.cpp”)
+  
 D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\EdoyunTool.h(12,27): warning C4305: “参数”: 从“int”到“_Elem”截断
 D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\EdoyunTool.h(12,27): warning C4305:         with
 D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\EdoyunTool.h(12,27): warning C4305:         [
@@ -9,22 +32,25 @@ D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtr
 D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\EdoyunTool.h(12,27): warning C4309: “参数”: 截断常量值
   (编译源文件“/RemoteCtrl.cpp”)
   
-D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\CEdoyunQueue.h(223,11): warning C4477: “printf”: 格式字符串“%08X”需要类型“unsigned int”的参数，但可变参数 1 拥有了类型“CEdoyunQueue<std::string>::IocpParam *”
+D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\RemoteCtrl.cpp(143,2): error C2660: “WSASend”: 函数不接受 0 个参数
   (编译源文件“/RemoteCtrl.cpp”)
-      D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\CEdoyunQueue.h(223,11):
-      模板实例化上下文(最早的实例化上下文)为
-          D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\RemoteCtrl.cpp(157,28):
-          查看对正在编译的 类 模板 实例化“CEdoyunQueue<std::string>”的引用
-          D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\CEdoyunQueue.h(189,7):
-          在编译 类 模板 成员函数“void CEdoyunQueue<std::string>::threadMain(void)”时
-              D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\CEdoyunQueue.h(149,19):
-              请参阅 "CEdoyunQueue<std::string>::threadEntry" 中对 "CEdoyunQueue<std::string>::threadMain" 的第一个引用
-              D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\CEdoyunQueue.h(47,14):
-              请参阅 "CEdoyunQueue<std::string>::CEdoyunQueue" 中对 "CEdoyunQueue<std::string>::threadEntry" 的第一个引用
-              D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\RemoteCtrl.cpp(157,28):
-              请参阅 "test" 中对 "CEdoyunQueue<std::string>::CEdoyunQueue" 的第一个引用
+      D:\Windows Kits\10\Include\10.0.26100.0\um\WinSock2.h(3300,1):
+      参见“WSASend”的声明
+      D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\RemoteCtrl.cpp(143,2):
+      尝试匹配参数列表“()”时
   
-D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\CEdoyunQueue.h(225,11): warning C4477: “printf”: 格式字符串“%08X”需要类型“unsigned int”的参数，但可变参数 1 拥有了类型“CEdoyunQueue<std::string>::IocpParam *”
+D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\RemoteCtrl.cpp(145,2): error C2660: “WSARecv”: 函数不接受 0 个参数
+  (编译源文件“/RemoteCtrl.cpp”)
+      D:\Windows Kits\10\Include\10.0.26100.0\um\WinSock2.h(3195,1):
+      参见“WSARecv”的声明
+      D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\RemoteCtrl.cpp(145,2):
+      尝试匹配参数列表“()”时
+  
+D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\RemoteCtrl.cpp(155,74): warning C4244: “参数”: 从“float”转换到“DWORD”，可能丢失数据
   (编译源文件“/RemoteCtrl.cpp”)
   
-  RemoteCtrl.vcxproj -> D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\Debug\RemoteCtrl.exe
+D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\RemoteCtrl.cpp(126,25): error C4996: 'inet_addr': Use inet_pton() or InetPton() instead or define _WINSOCK_DEPRECATED_NO_WARNINGS to disable deprecated API warnings
+  (编译源文件“/RemoteCtrl.cpp”)
+  
+  ServerSocket.cpp
+  正在生成代码...

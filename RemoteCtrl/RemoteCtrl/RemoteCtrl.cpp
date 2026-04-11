@@ -7,6 +7,7 @@
 #include "Command.h"
 #include <conio.h>
 #include "CEdoyunQueue.h"
+#include <MSWSock.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -53,175 +54,15 @@ bool ChooseAutoInvoke(const CString& strPath)
 	return true;
 }
 
-#define IOCP_LIST_EMPTY 0
-#define IOCP_LIST_PUSH 1
-#define IOCP_LIST_POP 2
-
-enum
-{
-	IocpListEmpty,
-	IocpListPush,
-	IocpListPop
-};
-
-typedef struct IocpParam
-{
-	int nOperator;			//operator
-	std::string strData;	//data
-	_beginthread_proc_type cbFunc;	//callback
-	IocpParam(int op, const char* sData, _beginthread_proc_type cb = NULL)
-	{
-		nOperator = op;
-		strData = sData;
-		cbFunc = cb;
-	}
-	IocpParam()
-	{
-		nOperator = -1;
-	}
-}IOCP_PARAM;
-
-void threadmain(HANDLE hIOCP)
-{
-	std::list<std::string> lstString;
-	DWORD dwTransferred = 0;
-	ULONG_PTR CompletionKey = 0;
-	OVERLAPPED* pOverlapped = NULL;
-	int count = 0, count0 = 0, total = 0;
-	while (GetQueuedCompletionStatus(hIOCP, &dwTransferred, &CompletionKey, &pOverlapped, INFINITE))
-	{
-		if (dwTransferred == 0 || (CompletionKey == NULL))
-		{
-			printf("thread is prepare to exit!\r\n");
-			break;
-		}
-		IOCP_PARAM* pParam = (IOCP_PARAM*)CompletionKey;
-		if (pParam->nOperator == IocpListPush)
-		{
-			lstString.push_back(pParam->strData);
-			printf("push size %d %p\r\n", lstString.size(), pOverlapped);
-			count0++;
-		}
-		else if (pParam->nOperator == IocpListPop)
-		{
-			printf("%p size=%d \r\n", pParam->cbFunc, lstString.size());
-			std::string str;
-			if (lstString.size() > 0)
-			{
-				str = lstString.front();
-				lstString.pop_front();
-			}
-			if (pParam->cbFunc)
-			{
-				pParam->cbFunc(&str);
-			}
-			count++;
-
-		}
-		else if (pParam->nOperator == IocpListEmpty)
-		{
-			lstString.clear();
-		}
-		delete pParam;
-		printf("total %d\r\n", ++total);
-	}
-	lstString.clear();
-	printf("thread exit count %d count0 %d \r\n", count, count0);
-}
-
-void threadQueueEntry(HANDLE hIOCP)
-{
-	threadmain(hIOCP);
-	_endthread();	//The code stops here, which will prevent the local object from being able to call the destructor, thereby causing memory leakage.
-}
-
-void func(void* arg)
-{
-	std::string* pstr = (std::string*)arg;
-	if (pstr != NULL)
-	{
-		printf("pop from list:%s \r\n", pstr->c_str());
-		//delete pstr;
-	}
-	else
-	{
-		printf("list is empty,no data!\r\n");
-	}
-
-}
-
-// Performance testing
-void test()
-{
-	//The push performance of CEdoyunQueue is excellent, while the pop performance is only one quarter of that.
-	//The performance of list push is lower than that of pop.
-	CEdoyunQueue<std::string> lstStrings;
-	ULONGLONG tick0 = GetTickCount64(), tick = GetTickCount64(), total = GetTickCount64();
-
-	while (GetTickCount64() - total <= 1000)	//Core:The completion port separates the request from the implementation.
-	{
-		// This bug is bound to happen, and it will seriously affect the program.
-		//if (GetTickCount64() - tick0 >= 5)
-		{
-			lstStrings.PushBack("hello world");
-			tick0 = GetTickCount64();
-		}
-		//Sleep(1);
-
-	}
-	size_t count = lstStrings.Size();
-	printf("lstStrings done!size %d\r\n", count);
-	total = GetTickCount64();
-	while (GetTickCount64() - total <= 1000)	//Core:The completion port separates the request from the implementation.
-	{
-		//if (GetTickCount64() - tick >= 5)
-		{
-			std::string str;
-			lstStrings.PopFront(str);
-			tick = GetTickCount64();
-			//printf("pop from queue:%s\r\n", str.c_str());
-		}
-		//Sleep(1);
-	}
-
-	printf("lstStrings done!size=%d\r\n", count - lstStrings.Size());
-	lstStrings.Clear();
-	std::list<std::string> lstData;
-	total = GetTickCount64();
-	while (GetTickCount64() - total <= 1000)
-	{
-		lstData.push_back("hello world!");
-	}
-	count = lstData.size();
-	printf("lstData push done!size = =%d\r\n", lstData.size());
-	total = GetTickCount64();
-	while (GetTickCount64() - total <= 250)
-	{
-		if (lstData.size() > 0)
-		{
-			lstData.pop_front();
-		}
-	}
-	printf("exit pop done!size=%d\r\n", (count - lstStrings.Size()) * 4);
-}
-
-/*
-1. Bug testing / Function testing
-2. Testing of critical factors (memory leakage, stability of operation, conditional conditions)
-3. Stress testing (reliability testing)
-4. Performance testing
-*/
+void iocp();
 
 int main()
 {
 	if (!CEdoyunTool::Init()) return 1;
 
-	//printf("press any key to exit... \r\n");
-	for (int i = 0;i < 100;i++)
-	{
-		test();
-	}
+	iocp();
 
+	return 0;
 	/*if (CEdoyunTool::IsAdmin())
 	{
 		if (!CEdoyunTool::Init()) return 1;
@@ -249,4 +90,79 @@ int main()
 		}
 	}
 	return 0;*/
+}
+
+class COverlapped
+{
+public:
+	OVERLAPPED m_overlapped;
+	DWORD m_operator;
+	char m_buffer[4096];
+	COverlapped()
+	{
+		m_operator = 0;
+		memset(&m_overlapped, 0, sizeof(m_overlapped));
+		memset(m_buffer, 0, sizeof(m_buffer));
+	}
+};
+
+void iocp()
+{
+	//SOCKET sock = socket(AF_INET, SOCK_STREAM, 0);	//TCP
+	//With overlapping structure, non-blocking
+	SOCKET sock = WSASocket(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
+	if (sock == INVALID_SOCKET)
+	{
+		CEdoyunTool::ShowError();
+		return;
+	}
+
+	HANDLE hIOCP = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, sock, 4);
+	SOCKET client = WSASocket(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
+	CreateIoCompletionPort((HANDLE)sock, hIOCP, 0, 0);
+
+	sockaddr_in addr;
+	addr.sin_family = PF_INET;
+	addr.sin_addr.s_addr = inet_addr("0.0.0.0");
+	addr.sin_port = htons(9527);
+
+	bind(sock, (sockaddr*)&addr, sizeof(addr));
+	listen(sock, 5);
+	COverlapped overlapped;
+	overlapped.m_operator = 1;	// accept
+	memset(&overlapped, 0, sizeof(OVERLAPPED));
+
+	//Compared to accept() a socket that has already been created in advance, this can increase the concurrency level.
+	char buffer[4096] = "";
+	DWORD received = 0;
+	if (AcceptEx(sock, client, overlapped.m_buffer, 0, sizeof(sockaddr_in) + 16, sizeof(sockaddr_in) + 16, &received, &overlapped.m_overlapped) == FALSE)
+	{
+		CEdoyunTool::ShowError();
+	}
+	overlapped.m_operator = 2;	// accept
+	WSASend();
+	overlapped.m_operator = 3;	// accept
+	WSARecv();
+
+	// Start the thread
+	while (true)
+	{
+		LPOVERLAPPED pOverlapped = NULL;
+		DWORD transferred = 0;
+		DWORD key = 0;
+		// Asynchronous operation, obtaining the pointer to the parent object through the address of the member variable
+		// Represents a thread
+		if (GetQueuedCompletionStatus(hIOCP, &transferred, &key, &pOverlapped, INFINITY))
+		{
+			COverlapped* pO = CONTAINING_RECORD(pOverlapped, COverlapped, m_overlapped);
+			switch (pO->m_operator)
+			{
+			case 1:
+				// Handling the Accept operation
+
+			default:
+				break;
+			}
+		}
+	}
 }
