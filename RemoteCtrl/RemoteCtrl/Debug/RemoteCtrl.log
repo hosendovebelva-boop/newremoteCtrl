@@ -1,56 +1,6 @@
-﻿  Command.cpp
-  EdoyunTool.cpp
-  LockInfoDialog.cpp
-  RemoteCtrl.cpp
-D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\EdoyunTool.h(12,27): warning C4305: “参数”: 从“int”到“_Elem”截断
-D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\EdoyunTool.h(12,27): warning C4305:         with
-D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\EdoyunTool.h(12,27): warning C4305:         [
-D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\EdoyunTool.h(12,27): warning C4305:             _Elem=char
-D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\EdoyunTool.h(12,27): warning C4305:         ]
-  (编译源文件“/Command.cpp”)
+﻿  EdoyunServer.cpp
+D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\EdoyunThread.h(221,13): warning C4018: “<”: 有符号/无符号不匹配
+  (编译源文件“/EdoyunServer.cpp”)
   
-D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\EdoyunTool.h(12,27): warning C4309: “参数”: 截断常量值
-  (编译源文件“/Command.cpp”)
-  
-D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\EdoyunTool.h(12,27): warning C4305: “参数”: 从“int”到“_Elem”截断
-D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\EdoyunTool.h(12,27): warning C4305:         with
-D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\EdoyunTool.h(12,27): warning C4305:         [
-D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\EdoyunTool.h(12,27): warning C4305:             _Elem=char
-D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\EdoyunTool.h(12,27): warning C4305:         ]
-  (编译源文件“/EdoyunTool.cpp”)
-  
-D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\EdoyunTool.h(12,27): warning C4309: “参数”: 截断常量值
-  (编译源文件“/EdoyunTool.cpp”)
-  
-D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\EdoyunTool.h(12,27): warning C4305: “参数”: 从“int”到“_Elem”截断
-D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\EdoyunTool.h(12,27): warning C4305:         with
-D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\EdoyunTool.h(12,27): warning C4305:         [
-D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\EdoyunTool.h(12,27): warning C4305:             _Elem=char
-D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\EdoyunTool.h(12,27): warning C4305:         ]
-  (编译源文件“/RemoteCtrl.cpp”)
-  
-D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\EdoyunTool.h(12,27): warning C4309: “参数”: 截断常量值
-  (编译源文件“/RemoteCtrl.cpp”)
-  
-D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\RemoteCtrl.cpp(143,2): error C2660: “WSASend”: 函数不接受 0 个参数
-  (编译源文件“/RemoteCtrl.cpp”)
-      D:\Windows Kits\10\Include\10.0.26100.0\um\WinSock2.h(3300,1):
-      参见“WSASend”的声明
-      D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\RemoteCtrl.cpp(143,2):
-      尝试匹配参数列表“()”时
-  
-D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\RemoteCtrl.cpp(145,2): error C2660: “WSARecv”: 函数不接受 0 个参数
-  (编译源文件“/RemoteCtrl.cpp”)
-      D:\Windows Kits\10\Include\10.0.26100.0\um\WinSock2.h(3195,1):
-      参见“WSARecv”的声明
-      D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\RemoteCtrl.cpp(145,2):
-      尝试匹配参数列表“()”时
-  
-D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\RemoteCtrl.cpp(155,74): warning C4244: “参数”: 从“float”转换到“DWORD”，可能丢失数据
-  (编译源文件“/RemoteCtrl.cpp”)
-  
-D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\RemoteCtrl.cpp(126,25): error C4996: 'inet_addr': Use inet_pton() or InetPton() instead or define _WINSOCK_DEPRECATED_NO_WARNINGS to disable deprecated API warnings
-  (编译源文件“/RemoteCtrl.cpp”)
-  
-  ServerSocket.cpp
-  正在生成代码...
+  LINK : 没有找到 D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\Debug\RemoteCtrl.exe 或上一个增量链接没有生成它；正在执行完全链接
+  RemoteCtrl.vcxproj -> D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\Debug\RemoteCtrl.exe

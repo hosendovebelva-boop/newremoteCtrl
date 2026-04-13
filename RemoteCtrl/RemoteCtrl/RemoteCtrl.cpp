@@ -8,6 +8,7 @@
 #include <conio.h>
 #include "CEdoyunQueue.h"
 #include <MSWSock.h>
+#include "EdoyunServer.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -108,6 +109,12 @@ public:
 
 void iocp()
 {
+
+	EdoyunServer server;
+	server.StartService();
+	getchar();
+
+	/*
 	//SOCKET sock = socket(AF_INET, SOCK_STREAM, 0);	//TCP
 	//With overlapping structure, non-blocking
 	SOCKET sock = WSASocket(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
@@ -165,4 +172,6 @@ void iocp()
 			}
 		}
 	}
+	*/
+
 }
