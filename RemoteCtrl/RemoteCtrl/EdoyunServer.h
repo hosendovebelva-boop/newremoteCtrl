@@ -28,9 +28,12 @@ public:
 	std::vector<char> m_buffer;	// buffer
 	ThreadWorker m_worker;		// dealFunc
 	EdoyunServer* m_server;		// Server object
-	PCLIENT m_client;			// The corresponding client application
+	EdoyunClient* m_client;			// The corresponding client application
 	WSABUF m_wsabuffer;			// 
-
+	virtual ~EdoyunOverlapped()
+	{
+		m_buffer.clear();
+	}
 };
 
 template<EdoyunOperator>class AcceptOverlapped;
@@ -43,13 +46,18 @@ template<EdoyunOperator>class SendOverlapped;
 typedef SendOverlapped<ESend> SENDOVERLAPPED;
 
 
-class EdoyunClient
+class EdoyunClient:public ThreadFuncBase
 {
 public:
 	EdoyunClient();
 	~EdoyunClient()
 	{
+		m_buffer.clear();
 		closesocket(m_sock);
+		m_recv.reset();
+		m_send.reset();
+		m_overlapped.reset();
+		m_vecSend.Clear();
 	}
 
 	void setOverlapped(PCLIENT& ptr);
@@ -77,14 +85,9 @@ public:
 	sockaddr_in* GetLocalAddr() { return &m_laddr; }
 	sockaddr_in* GetRmoteAddr() { return &m_raddr; }
 	size_t GetBufferSize()const { return m_buffer.size(); }
-	int Recv()
-	{
-		int ret = recv(m_sock, m_buffer.data() + m_used, m_buffer.size() - m_used, 0);
-		if (ret <= 0) return -1;
-		m_used += (size_t)ret;
-		// TODO:Analyze the data
-		return 0;
-	}
+	int Recv();
+	int Send(void* buffer, size_t nSize);
+	int SendData(std::vector<char>& data);
 private:
 	SOCKET m_sock;
 	DWORD m_received;
@@ -97,6 +100,7 @@ private:
 	sockaddr_in m_laddr;
 	sockaddr_in m_raddr;
 	bool m_isbusy;
+	EdoyunSendQueue<std::vector<char>> m_vecSend;	//Send data queue
 };
 
 template<EdoyunOperator>
@@ -105,7 +109,6 @@ class AcceptOverlapped :public EdoyunOverlapped, ThreadFuncBase
 public:
 	AcceptOverlapped();
 	int AcceptWorker();
-	PCLIENT m_client;
 };
 
 template<EdoyunOperator>
@@ -118,7 +121,7 @@ public:
 		int ret = m_client->Recv();
 		return ret;
 	}
-	PCLIENT m_client;
+	//PCLIENT m_client;
 };
 
 template<EdoyunOperator>
@@ -128,7 +131,11 @@ public:
 	SendOverlapped();
 	int SendWorker()
 	{
-		//TODO
+		
+		/*
+		* 1. Sending may not be completed immediately.
+		* 
+		*/
 		return -1;
 	}
 };
@@ -164,37 +171,15 @@ public:
 		m_addr.sin_port = htons(port);
 		m_addr.sin_addr.s_addr = inet_addr(ip.c_str());
 	}
-	~EdoyunServer() {}
+
+	~EdoyunServer();
+
 	bool StartService();
-	bool NewAccept()
-	{
-		PCLIENT pClient(new EdoyunClient());
-		pClient->setOverlapped(pClient);
-		m_client.insert(std::pair<SOCKET, PCLIENT>(*pClient, pClient));
-		if (!AcceptEx(m_sock,
-			*pClient,
-			*pClient,
-			0,
-			sizeof(sockaddr_in) + 16, sizeof(sockaddr_in) + 16,
-			*pClient, *pClient))
-		{
-			closesocket(m_sock);
-			m_sock = INVALID_SOCKET;
-			m_hIOCP = INVALID_HANDLE_VALUE;
-			return false;
-		}
-		return true;
-	}
+	bool NewAccept();
+	
 
 private:
-	void CreateSocket()
-	{
-		m_sock = WSASocket(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
-		int opt = 1;
-		setsockopt(m_sock, SOL_SOCKET, SO_REUSEADDR, (const char*)&opt, sizeof(opt));
-
-	}
-
+	void CreateSocket();
 	int threadIocp();
 private:
 	EdoyunThreadPool m_pool;

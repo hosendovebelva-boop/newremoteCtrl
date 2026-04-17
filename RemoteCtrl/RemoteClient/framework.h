@@ -11,6 +11,7 @@
 // Turn off some common hidden MFC warning messages that are usually safe to ignore
 #define _AFX_ALL_WARNINGS
 
+
 #include <afxwin.h>         // MFC core and standard components
 #include <afxext.h>         // MFC extensions
 
