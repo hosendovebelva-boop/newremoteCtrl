@@ -10,7 +10,7 @@ class ThreadWorker
 {
 public:
 	ThreadWorker() :thiz(NULL), func(NULL) {};
-	ThreadWorker(ThreadFuncBase* obj, FUNCTYPE f) :thiz(obj), func(f) {}
+	ThreadWorker(void* obj, FUNCTYPE f) :thiz((ThreadFuncBase*)obj), func(f) {}
 	ThreadWorker(const ThreadWorker& worker)
 	{
 		thiz = worker.thiz;
@@ -143,7 +143,10 @@ private:
 					}
 					if (ret < 0)
 					{
+						// Memory leak point (fixed)
+						::ThreadWorker* pWorker = m_worker.load();
 						m_worker.store(NULL);
+						delete pWorker;
 					}
 				}
 			}

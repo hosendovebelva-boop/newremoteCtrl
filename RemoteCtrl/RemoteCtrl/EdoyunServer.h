@@ -71,7 +71,6 @@ public:
 	{
 		return &m_buffer[0];
 	}
-
 	operator LPOVERLAPPED();
 
 	operator LPDWORD()
@@ -80,7 +79,9 @@ public:
 	}
 
 	LPWSABUF RecvWSABuffer();
+	LPWSAOVERLAPPED RecvOverlapped();
 	LPWSABUF SendWSABuffer();
+	LPWSAOVERLAPPED SendOverlapped();
 	DWORD& flags() { return m_flags; }
 	sockaddr_in* GetLocalAddr() { return &m_laddr; }
 	sockaddr_in* GetRmoteAddr() { return &m_raddr; }
@@ -173,11 +174,9 @@ public:
 	}
 
 	~EdoyunServer();
-
 	bool StartService();
 	bool NewAccept();
-	
-
+	void BindNewSocket(SOCKET s);
 private:
 	void CreateSocket();
 	int threadIocp();
