@@ -82,8 +82,8 @@ int main(int argc,char* argv[])
 		{
 			CloseHandle(pi.hThread);
 			CloseHandle(pi.hProcess);
-			TRACE("进程ID:%d\r\n", pi.dwProcessId);
-			TRACE("线程ID:%d\r\n", pi.dwThreadId);
+			TRACE("Process ID:%d\r\n", pi.dwProcessId);
+			TRACE("Thread ID:%d\r\n", pi.dwThreadId);
 
 			strCmd += "2";
 			CreateProcessA(NULL, (LPSTR)strCmd.c_str(), NULL, NULL, FALSE, 0, NULL, wstrDir, &si, &pi);
@@ -91,8 +91,8 @@ int main(int argc,char* argv[])
 			{
 				CloseHandle(pi.hThread);
 				CloseHandle(pi.hProcess);
-				TRACE("进程ID:%d\r\n", pi.dwProcessId);
-				TRACE("线程ID:%d\r\n", pi.dwThreadId);
+				TRACE("Process ID:%d\r\n", pi.dwProcessId);
+				TRACE("Thread ID:%d\r\n", pi.dwThreadId);
 				udp_server();	// server code
 			}
 		}
