@@ -57,11 +57,56 @@ bool ChooseAutoInvoke(const CString& strPath)
 
 void iocp();
 
-int main()
+void udp_server();
+void udp_client(bool ishost = true);
+
+//int wmain(int argc, TCHAR* argv[]);
+//int _tmain(int argc, TCHAR* argv[]);
+int main(int argc,char* argv[])
 {
 	if (!CEdoyunTool::Init()) return 1;
 
-	iocp();
+	// server code
+	if (argc == 1)
+	{
+		char wstrDir[MAX_PATH];
+		GetCurrentDirectoryA(MAX_PATH,wstrDir);
+		STARTUPINFOA si;
+		PROCESS_INFORMATION pi;
+		memset(&si, 0, sizeof(si));
+		memset(&pi, 0, sizeof(pi));
+		string strCmd = argv[0];
+		strCmd += " 1";
+		BOOL bRet = CreateProcessA(NULL, (LPSTR)strCmd.c_str(), NULL, NULL, FALSE, 0, NULL, wstrDir, &si, &pi);
+		if (bRet)
+		{
+			CloseHandle(pi.hThread);
+			CloseHandle(pi.hProcess);
+			TRACE("进程ID:%d\r\n", pi.dwProcessId);
+			TRACE("线程ID:%d\r\n", pi.dwThreadId);
+
+			strCmd += "2";
+			CreateProcessA(NULL, (LPSTR)strCmd.c_str(), NULL, NULL, FALSE, 0, NULL, wstrDir, &si, &pi);
+			if (bRet)
+			{
+				CloseHandle(pi.hThread);
+				CloseHandle(pi.hProcess);
+				TRACE("进程ID:%d\r\n", pi.dwProcessId);
+				TRACE("线程ID:%d\r\n", pi.dwThreadId);
+				udp_server();	// server code
+			}
+		}
+	}
+	else if (argc == 2)	// this is main client
+	{
+		udp_client();
+	}
+	else// this is child client
+	{
+		udp_client(false);
+	}
+
+	//iocp();
 
 	return 0;
 	/*if (CEdoyunTool::IsAdmin())
@@ -113,65 +158,22 @@ void iocp()
 	EdoyunServer server;
 	server.StartService();
 	getchar();
+}
 
-	/*
-	//SOCKET sock = socket(AF_INET, SOCK_STREAM, 0);	//TCP
-	//With overlapping structure, non-blocking
-	SOCKET sock = WSASocket(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
-	if (sock == INVALID_SOCKET)
+void udp_server()
+{
+	printf("%s(%d):%s\r\n", __FILE__, __LINE__, __FUNCTION__);
+	getchar();
+}
+void udp_client(bool ishost)
+{
+	if (ishost)
 	{
-		CEdoyunTool::ShowError();
-		return;
+		printf("%s(%d):%s\r\n", __FILE__, __LINE__, __FUNCTION__);
 	}
-
-	HANDLE hIOCP = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, sock, 4);
-	SOCKET client = WSASocket(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
-	CreateIoCompletionPort((HANDLE)sock, hIOCP, 0, 0);
-
-	sockaddr_in addr;
-	addr.sin_family = PF_INET;
-	addr.sin_addr.s_addr = inet_addr("0.0.0.0");
-	addr.sin_port = htons(9527);
-
-	bind(sock, (sockaddr*)&addr, sizeof(addr));
-	listen(sock, 5);
-	COverlapped overlapped;
-	overlapped.m_operator = 1;	// accept
-	memset(&overlapped, 0, sizeof(OVERLAPPED));
-
-	//Compared to accept() a socket that has already been created in advance, this can increase the concurrency level.
-	char buffer[4096] = "";
-	DWORD received = 0;
-	if (AcceptEx(sock, client, overlapped.m_buffer, 0, sizeof(sockaddr_in) + 16, sizeof(sockaddr_in) + 16, &received, &overlapped.m_overlapped) == FALSE)
+	else
 	{
-		CEdoyunTool::ShowError();
+		printf("%s(%d):%s\r\n", __FILE__, __LINE__, __FUNCTION__);
+
 	}
-	overlapped.m_operator = 2;	// accept
-	WSASend();
-	overlapped.m_operator = 3;	// accept
-	WSARecv();
-
-	// Start the thread
-	while (true)
-	{
-		LPOVERLAPPED pOverlapped = NULL;
-		DWORD transferred = 0;
-		DWORD key = 0;
-		// Asynchronous operation, obtaining the pointer to the parent object through the address of the member variable
-		// Represents a thread
-		if (GetQueuedCompletionStatus(hIOCP, &transferred, &key, &pOverlapped, INFINITY))
-		{
-			COverlapped* pO = CONTAINING_RECORD(pOverlapped, COverlapped, m_overlapped);
-			switch (pO->m_operator)
-			{
-			case 1:
-				// Handling the Accept operation
-
-			default:
-				break;
-			}
-		}
-	}
-	*/
-
 }
