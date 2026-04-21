@@ -12,21 +12,34 @@ D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtr
 D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\EdoyunThread.h(248,13): warning C4018: “<”: 有符号/无符号不匹配
   (编译源文件“/RemoteCtrl.cpp”)
   
-D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\RemoteCtrl.cpp(79,15): error C2664: “BOOL CreateProcessA(LPCSTR,LPSTR,LPSECURITY_ATTRIBUTES,LPSECURITY_ATTRIBUTES,BOOL,DWORD,LPVOID,LPCSTR,LPSTARTUPINFOA,LPPROCESS_INFORMATION)”: 无法将参数 9 从“STARTUPINFO *”转换为“LPSTARTUPINFOA”
+D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\CEdoyunQueue.h(165,11): warning C4477: “printf”: 格式字符串“%08X”需要类型“unsigned int”的参数，但可变参数 1 拥有了类型“CEdoyunQueue<T>::IocpParam *”
+D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\CEdoyunQueue.h(165,11): warning C4477:         with
+D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\CEdoyunQueue.h(165,11): warning C4477:         [
+D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\CEdoyunQueue.h(165,11): warning C4477:             T=std::vector<char,std::allocator<char>>
+D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\CEdoyunQueue.h(165,11): warning C4477:         ]
   (编译源文件“/RemoteCtrl.cpp”)
-      D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\RemoteCtrl.cpp(79,96):
-      指向的类型不相关; 转换需要 reinterpret_cast、C 样式强制转换或带圆括号的函数样式强制转换
-      D:\Windows Kits\10\Include\10.0.26100.0\um\processthreadsapi.h(369,1):
-      参见“CreateProcessA”的声明
-      D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\RemoteCtrl.cpp(79,15):
-      尝试匹配参数列表“(int, LPSTR, int, int, int, int, int, char [260], STARTUPINFO *, PROCESS_INFORMATION *)”时
+      D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\CEdoyunQueue.h(165,11):
+      模板实例化上下文(最早的实例化上下文)为
+          D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\CEdoyunQueue.h(277,45):
+          查看对正在编译的 类 模板 实例化“EdoyunSendQueue<std::vector<char,std::allocator<char>>>”的引用
+          D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\CEdoyunQueue.h(184,31):
+          查看对正在编译的 类 模板 实例化“CEdoyunQueue<T>”的引用
+          with
+          [
+              T=std::vector<char,std::allocator<char>>
+          ]
+          D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\CEdoyunQueue.h(131,15):
+          在编译 类 模板 成员函数“void CEdoyunQueue<T>::threadMain(void)”时
+          with
+          [
+              T=std::vector<char,std::allocator<char>>
+          ]
   
-D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\RemoteCtrl.cpp(88,4): error C2664: “BOOL CreateProcessA(LPCSTR,LPSTR,LPSECURITY_ATTRIBUTES,LPSECURITY_ATTRIBUTES,BOOL,DWORD,LPVOID,LPCSTR,LPSTARTUPINFOA,LPPROCESS_INFORMATION)”: 无法将参数 9 从“STARTUPINFO *”转换为“LPSTARTUPINFOA”
+D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\CEdoyunQueue.h(167,11): warning C4477: “printf”: 格式字符串“%08X”需要类型“unsigned int”的参数，但可变参数 1 拥有了类型“CEdoyunQueue<T>::IocpParam *”
+D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\CEdoyunQueue.h(167,11): warning C4477:         with
+D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\CEdoyunQueue.h(167,11): warning C4477:         [
+D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\CEdoyunQueue.h(167,11): warning C4477:             T=std::vector<char,std::allocator<char>>
+D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\CEdoyunQueue.h(167,11): warning C4477:         ]
   (编译源文件“/RemoteCtrl.cpp”)
-      D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\RemoteCtrl.cpp(88,85):
-      指向的类型不相关; 转换需要 reinterpret_cast、C 样式强制转换或带圆括号的函数样式强制转换
-      D:\Windows Kits\10\Include\10.0.26100.0\um\processthreadsapi.h(369,1):
-      参见“CreateProcessA”的声明
-      D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\RemoteCtrl.cpp(88,4):
-      尝试匹配参数列表“(int, LPSTR, int, int, int, int, int, char [260], STARTUPINFO *, PROCESS_INFORMATION *)”时
   
+  RemoteCtrl.vcxproj -> D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\Debug\RemoteCtrl.exe
