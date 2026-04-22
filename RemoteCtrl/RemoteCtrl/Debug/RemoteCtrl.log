@@ -1,4 +1,9 @@
-﻿  RemoteCtrl.cpp
+﻿  ENetWork.cpp
+  ESocket.cpp
+  RemoteCtrl.cpp
+D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\EdoyunThread.h(248,13): warning C4018: “<”: 有符号/无符号不匹配
+  (编译源文件“/ENetWork.cpp”)
+  
 D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\EdoyunTool.h(12,27): warning C4305: “参数”: 从“int”到“_Elem”截断
 D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\EdoyunTool.h(12,27): warning C4305:         with
 D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\EdoyunTool.h(12,27): warning C4305:         [
@@ -42,4 +47,5 @@ D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtr
 D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\RemoteCtrl\CEdoyunQueue.h(167,11): warning C4477:         ]
   (编译源文件“/RemoteCtrl.cpp”)
   
+  正在生成代码...
   RemoteCtrl.vcxproj -> D:\c++\project\remote_ctl\remote_ctl1\remote_ctl\remote_ctl\RemoteCtrl\Debug\RemoteCtrl.exe

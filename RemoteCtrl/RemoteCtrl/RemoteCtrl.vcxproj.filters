@@ -54,6 +54,12 @@
     <ClInclude Include="EdoyunServer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ESocket.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ENetWork.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RemoteCtrl.cpp">
@@ -75,6 +81,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="EdoyunServer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ESocket.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ENetWork.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
