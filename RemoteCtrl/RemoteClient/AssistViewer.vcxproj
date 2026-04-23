@@ -22,7 +22,7 @@
     <VCProjectVersion>17.0</VCProjectVersion>
     <ProjectGuid>{533FAB59-4BC3-149E-9558-9A012AF1739A}</ProjectGuid>
     <Keyword>MFCProj</Keyword>
-    <RootNamespace>ScreenShareViewer</RootNamespace>
+    <RootNamespace>AssistViewer</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -85,7 +85,7 @@
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup>
-    <TargetName>ScreenShareViewer</TargetName>
+    <TargetName>AssistViewer</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>

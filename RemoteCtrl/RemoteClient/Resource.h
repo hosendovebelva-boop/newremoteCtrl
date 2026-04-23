@@ -11,14 +11,15 @@
 #define IDC_EDIT_SESSION_CODE           1003
 #define IDC_BTN_CONNECT                 1004
 #define IDC_EDIT_STATUS                 1005
-#define IDC_STATIC_WATCH_IMAGE          1006
-#define IDC_BTN_END_SESSION             1007
+#define IDC_EDIT_HELPER_NAME            1006
+#define IDC_STATIC_WATCH_IMAGE          1007
+#define IDC_BTN_END_SESSION             1008
 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        134
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1008
+#define _APS_NEXT_CONTROL_VALUE         1009
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

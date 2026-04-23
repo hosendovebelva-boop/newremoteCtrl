@@ -24,7 +24,7 @@ BOOL CHostMainDlg::OnInitDialog()
     SetIcon(m_icon, TRUE);
     SetIcon(m_icon, FALSE);
 
-    SetWindowText(_T("Screen Share Host - Waiting for viewer"));
+    SetWindowText(_T("Remote Assist Host - Waiting for viewer"));
     SetDlgItemText(IDC_STATIC_HOST_IP_VALUE, CEdoyunTool::JoinLocalIpv4Addresses());
 
     CString portText;
@@ -55,7 +55,7 @@ void CHostMainDlg::OnCancel()
 
 void CHostMainDlg::OnBnClickedStopSharing()
 {
-    m_server.EndSession();
+    m_server.EndSession(_T("Session ended locally."));
 }
 
 LRESULT CHostMainDlg::OnServerEvent(WPARAM wParam, LPARAM lParam)
@@ -79,10 +79,11 @@ LRESULT CHostMainDlg::OnServerEvent(WPARAM wParam, LPARAM lParam)
     case HostServerEventType::SharingStarted:
     {
         CString title;
-        title.Format(_T("Screen Share Host - Sharing with %s"), payload->peerIp.GetString());
+        const CString displayName = payload->helperName.IsEmpty() ? payload->peerIp : payload->helperName;
+        title.Format(_T("Remote Assist Host - Sharing with %s"), displayName.GetString());
         SetWindowText(title);
         CString status;
-        status.Format(_T("Sharing with %s"), payload->peerIp.GetString());
+        status.Format(_T("Sharing with %s (%s)"), displayName.GetString(), payload->peerIp.GetString());
         UpdateStatus(status);
         GetDlgItem(IDC_BTN_STOP_SHARING)->EnableWindow(TRUE);
         m_banner.EnsureCreated(m_hWnd);
@@ -90,14 +91,14 @@ LRESULT CHostMainDlg::OnServerEvent(WPARAM wParam, LPARAM lParam)
         break;
     }
     case HostServerEventType::SessionEnded:
-        SetWindowText(_T("Screen Share Host - Waiting for viewer"));
+        SetWindowText(_T("Remote Assist Host - Waiting for viewer"));
         m_banner.HideBanner();
         GetDlgItem(IDC_BTN_STOP_SHARING)->EnableWindow(FALSE);
         RefreshSessionCode();
         UpdateStatus(_T("Waiting for viewer"));
         break;
     case HostServerEventType::Error:
-        SetWindowText(_T("Screen Share Host - Waiting for viewer"));
+        SetWindowText(_T("Remote Assist Host - Waiting for viewer"));
         m_banner.HideBanner();
         GetDlgItem(IDC_BTN_STOP_SHARING)->EnableWindow(FALSE);
         RefreshSessionCode();
@@ -120,8 +121,9 @@ LRESULT CHostMainDlg::OnConsentRequest(WPARAM wParam, LPARAM lParam)
     }
 
     CConsentDialog dialog(this);
-    dialog.SetViewerIp(request->peerIp);
-    request->allowed = (dialog.DoModal() == IDOK);
+    dialog.SetRequestDetails(request->peerIp, request->helperName, request->sessionCode, request->hostName);
+    request->result = (dialog.DoModal() == IDOK) ? ScreenShareProtocol::Approved
+                                                 : (dialog.WasTimedOut() ? ScreenShareProtocol::TimedOut : ScreenShareProtocol::Denied);
     ::SetEvent(request->completedEvent);
     return 0;
 }
@@ -130,7 +132,7 @@ LRESULT CHostMainDlg::OnBannerEndSession(WPARAM wParam, LPARAM lParam)
 {
     UNREFERENCED_PARAMETER(wParam);
     UNREFERENCED_PARAMETER(lParam);
-    m_server.EndSession();
+    m_server.EndSession(_T("Session ended locally."));
     return 0;
 }
 
@@ -174,7 +176,7 @@ void CHostMainDlg::ConfigureTrayIcon()
     m_trayData.uFlags = NIF_MESSAGE | NIF_ICON | NIF_TIP;
     m_trayData.uCallbackMessage = WM_HOST_TRAYICON;
     m_trayData.hIcon = m_icon;
-    _tcscpy_s(m_trayData.szTip, _T("Screen Share Host"));
+    _tcscpy_s(m_trayData.szTip, _T("Remote Assist Host"));
     Shell_NotifyIcon(NIM_ADD, &m_trayData);
 }
 
@@ -206,7 +208,7 @@ void CHostMainDlg::ShowTrayMenu()
         SetForegroundWindow();
         break;
     case ID_TRAY_STOP:
-        m_server.EndSession();
+        m_server.EndSession(_T("Session ended locally."));
         break;
     case ID_TRAY_EXIT:
         OnCancel();

@@ -4,10 +4,10 @@ This repository now contains a consent-based screen-sharing sample, not a remote
 
 ## Solution
 
-- Solution: `RemoteCtrl/RemoteCtrl.sln`
+- Solution: `RemoteCtrl/RemoteAssist.sln`
 - Projects:
-  - `ScreenShareHost` -> `RemoteCtrl/RemoteCtrl/RemoteCtrl.vcxproj`
-  - `ScreenShareViewer` -> `RemoteCtrl/RemoteClient/RemoteClient.vcxproj`
+  - `AssistHost` -> `RemoteCtrl/RemoteCtrl/AssistHost.vcxproj`
+  - `AssistViewer` -> `RemoteCtrl/RemoteClient/AssistViewer.vcxproj`
   - `PacketTests` -> `RemoteCtrl/PacketTests/PacketTests.vcxproj`
 
 ## Core shared files
@@ -19,13 +19,13 @@ These two files define the wire contract used by both applications.
 
 ## Product behavior
 
-- `ScreenShareHost` is always visible.
+- `AssistHost` is always visible.
 - The host generates a 6-digit session code per session.
-- The viewer must submit that code before the host user is asked for consent.
+- The viewer must send that code plus a helper name in the `Hello` handshake before the host user is asked for consent.
 - The host must explicitly allow the request.
 - The viewer can only request screenshots.
 - Screenshot requests are paced at 500 ms intervals.
-- Either side can end the session.
+- Ending the session closes the TCP connection.
 
 ## Out of scope by design
 
@@ -55,8 +55,8 @@ These two files define the wire contract used by both applications.
 
 - Use `PacketTests` for packet parser regression coverage.
 - Preferred manual smoke path:
-  1. Run `ScreenShareHost`
-  2. Run `ScreenShareViewer`
+  1. Run `AssistHost`
+  2. Run `AssistViewer`
   3. Submit a wrong code, then a correct code
   4. Deny once, allow once
   5. End the session from both host and viewer

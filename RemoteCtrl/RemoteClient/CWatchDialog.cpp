@@ -30,7 +30,7 @@ void CWatchDialog::ShowWatch()
         return;
     }
 
-    SetWindowText(_T("Screen Share Viewer - Active Session"));
+    SetWindowText(_T("Remote Assist Viewer - Active Session"));
     ShowWindow(SW_SHOW);
     SetForegroundWindow();
     SetTimer(1, ScreenShareProtocol::kFrameIntervalMs, nullptr);

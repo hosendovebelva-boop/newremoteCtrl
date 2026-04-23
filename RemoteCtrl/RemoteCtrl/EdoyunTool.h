@@ -71,13 +71,13 @@ private:
         for (addrinfo* current = info; current != nullptr; current = current->ai_next)
         {
             const sockaddr_in* address = reinterpret_cast<const sockaddr_in*>(current->ai_addr);
-            char ipBuffer[INET_ADDRSTRLEN] = {};
-            if (inet_ntop(AF_INET, &address->sin_addr, ipBuffer, sizeof(ipBuffer)) == nullptr)
+            WCHAR ipBuffer[INET_ADDRSTRLEN] = {};
+            if (InetNtopW(AF_INET, const_cast<IN_ADDR*>(&address->sin_addr), ipBuffer, _countof(ipBuffer)) == nullptr)
             {
                 continue;
             }
 
-            CString ip(CA2T(ipBuffer));
+            CString ip(ipBuffer);
             if (ip == _T("127.0.0.1"))
             {
                 continue;

@@ -28,7 +28,7 @@ BOOL CRemoteClientApp::InitInstance()
     CWinApp::InitInstance();
     AfxEnableControlContainer();
     CMFCVisualManager::SetDefaultManager(RUNTIME_CLASS(CMFCVisualManagerWindows));
-    SetRegistryKey(_T("ScreenShareViewer"));
+    SetRegistryKey(_T("AssistViewer"));
 
     WSADATA wsaData = {};
     if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)

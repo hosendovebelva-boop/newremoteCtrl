@@ -29,6 +29,7 @@ void CRemoteClientDlg::DoDataExchange(CDataExchange* pDX)
     DDX_IPAddress(pDX, IDC_IPADDRESS_SERV, m_serverAddress);
     DDX_Text(pDX, IDC_EDIT_PORT, m_portText);
     DDX_Text(pDX, IDC_EDIT_SESSION_CODE, m_sessionCode);
+    DDX_Text(pDX, IDC_EDIT_HELPER_NAME, m_helperName);
 }
 
 BOOL CRemoteClientDlg::OnInitDialog()
@@ -37,8 +38,10 @@ BOOL CRemoteClientDlg::OnInitDialog()
 
     SetIcon(m_hIcon, TRUE);
     SetIcon(m_hIcon, FALSE);
-    SetWindowText(_T("Screen Share Viewer"));
-    SetStatus(_T("Enter the host IP, port, and 6-digit session code."));
+    SetWindowText(_T("Remote Assist Viewer"));
+    SetStatus(_T("Enter the host IP, port, a 6-digit session code, and your helper name."));
+    GetDlgItem(IDC_EDIT_SESSION_CODE)->SendMessage(EM_SETLIMITTEXT, ScreenShareProtocol::kSessionCodeLength, 0);
+    GetDlgItem(IDC_EDIT_HELPER_NAME)->SendMessage(EM_SETLIMITTEXT, ScreenShareProtocol::kHelperNameMaxLength, 0);
     UpdateData(FALSE);
     return TRUE;
 }
@@ -56,11 +59,18 @@ void CRemoteClientDlg::OnBnClickedConnect()
 {
     UpdateData(TRUE);
 
+    m_sessionCode.Trim();
+    m_helperName.Trim();
+    UpdateData(FALSE);
+
     const UINT port = _ttoi(m_portText);
     const std::string sessionCode = CT2A(m_sessionCode);
-    if (!ScreenShareProtocol::IsValidSessionCode(sessionCode) || port == 0)
+    const CW2A helperNameUtf8(m_helperName, CP_UTF8);
+    const std::string helperName(helperNameUtf8);
+    std::string helloPayload;
+    if (port == 0 || !ScreenShareProtocol::BuildHelloPayload(sessionCode, helperName, helloPayload))
     {
-        SetStatus(_T("Please enter a valid host IP, port, and 6-digit session code."));
+        SetStatus(_T("Please enter a valid host IP, port, 6-digit session code, and helper name."));
         return;
     }
 
@@ -70,12 +80,12 @@ void CRemoteClientDlg::OnBnClickedConnect()
         return;
     }
 
-    if (!m_socket.SendPacket(CPacket(ScreenShareProtocol::SubmitSessionCode, sessionCode)))
+    if (!m_socket.SendPacket(CPacket(ScreenShareProtocol::Hello, helloPayload)))
     {
         m_localCloseInProgress = true;
         m_socket.Close();
         m_localCloseInProgress = false;
-        SetStatus(_T("Failed to send the session code."));
+        SetStatus(_T("Failed to send the connection hello."));
         return;
     }
 
@@ -92,13 +102,13 @@ LRESULT CRemoteClientDlg::OnViewerPacket(WPARAM wParam, LPARAM lParam)
         return 0;
     }
 
-    if (packet->Command() == ScreenShareProtocol::SessionStatus && !packet->Payload().empty())
+    if (packet->Command() == ScreenShareProtocol::ConsentResult && !packet->Payload().empty())
     {
         HandleSessionStatus(static_cast<BYTE>(packet->Payload()[0]));
         return 0;
     }
 
-    if (packet->Command() == ScreenShareProtocol::SendScreen)
+    if (packet->Command() == ScreenShareProtocol::FrameRequest)
     {
         m_framePending = false;
         if (m_sessionActive)
@@ -106,11 +116,6 @@ LRESULT CRemoteClientDlg::OnViewerPacket(WPARAM wParam, LPARAM lParam)
             m_watchDialog.UpdateFrame(packet->Payload());
         }
         return 0;
-    }
-
-    if (packet->Command() == ScreenShareProtocol::EndSession)
-    {
-        HandleRemoteSessionEnded(_T("Session ended by host."));
     }
 
     return 0;
@@ -146,7 +151,7 @@ LRESULT CRemoteClientDlg::OnWatchRequestFrame(WPARAM wParam, LPARAM lParam)
         return 0;
     }
 
-    if (m_socket.SendPacket(CPacket(ScreenShareProtocol::SendScreen, nullptr, 0)))
+    if (m_socket.SendPacket(CPacket(ScreenShareProtocol::FrameRequest, nullptr, 0)))
     {
         m_framePending = true;
     }
@@ -162,11 +167,6 @@ LRESULT CRemoteClientDlg::OnWatchEndSession(WPARAM wParam, LPARAM lParam)
 {
     UNREFERENCED_PARAMETER(wParam);
     UNREFERENCED_PARAMETER(lParam);
-
-    if (m_socket.IsConnected())
-    {
-        m_socket.SendPacket(CPacket(ScreenShareProtocol::EndSession, nullptr, 0));
-    }
 
     m_localCloseInProgress = true;
     m_socket.Close();
@@ -232,17 +232,17 @@ void CRemoteClientDlg::HandleSessionStatus(BYTE status)
         GetDlgItem(IDC_BTN_CONNECT)->EnableWindow(TRUE);
         SetStatus(_T("Incorrect session code."));
         break;
-    case ScreenShareProtocol::CodeAcceptedWaitingConsent:
+    case ScreenShareProtocol::WaitingForConsent:
         SetStatus(_T("Waiting for host approval..."));
         break;
-    case ScreenShareProtocol::ConsentDenied:
+    case ScreenShareProtocol::Denied:
         m_localCloseInProgress = true;
         m_socket.Close();
         m_localCloseInProgress = false;
         GetDlgItem(IDC_BTN_CONNECT)->EnableWindow(TRUE);
         SetStatus(_T("Host denied the request."));
         break;
-    case ScreenShareProtocol::ConsentGranted:
+    case ScreenShareProtocol::Approved:
         m_sessionActive = true;
         m_framePending = false;
         m_watchDialog.EnsureCreated(this);
@@ -256,8 +256,12 @@ void CRemoteClientDlg::HandleSessionStatus(BYTE status)
         GetDlgItem(IDC_BTN_CONNECT)->EnableWindow(TRUE);
         SetStatus(_T("The host is already sharing with another viewer."));
         break;
-    case ScreenShareProtocol::SessionEnded:
-        HandleRemoteSessionEnded(_T("Session ended by host."));
+    case ScreenShareProtocol::TimedOut:
+        m_localCloseInProgress = true;
+        m_socket.Close();
+        m_localCloseInProgress = false;
+        GetDlgItem(IDC_BTN_CONNECT)->EnableWindow(TRUE);
+        SetStatus(_T("Host did not respond before the consent timer expired."));
         break;
     default:
         break;

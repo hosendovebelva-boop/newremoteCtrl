@@ -1,18 +1,18 @@
-# ScreenShareHost / ScreenShareViewer
+# RemoteAssist
 
-A consent-based LAN screen sharing sample built with MFC and Winsock.
+A consent-based LAN screen-sharing sample built with MFC and Winsock.
 
 ## What this repo contains
 
-This repository now ships two Windows applications inside `RemoteCtrl/RemoteCtrl.sln`:
+This repository now ships three Visual Studio projects inside `RemoteCtrl/RemoteAssist.sln`:
 
-- `ScreenShareHost`: a visible host app that shows local IPs, generates a 6-digit session code, asks for consent, and displays a top banner while sharing is active.
-- `ScreenShareViewer`: a visible viewer app that connects to the host, submits the session code, waits for host approval, and displays read-only screen updates.
-- `PacketTests`: a small console test project that exercises the shared packet parser.
+- `AssistHost`: a visible host app that shows local IPs, generates a 6-digit session code, asks for local consent, and displays a session banner while sharing is active.
+- `AssistViewer`: a visible viewer app that connects to the host, sends a `Hello` handshake with the session code plus a helper display name, waits for host approval, and displays read-only screen updates.
+- `PacketTests`: a small console test project that exercises the shared packet parser and `Hello` payload validation.
 
 ## Safety boundaries
 
-This codebase is intentionally scoped to a narrow, visible screen-sharing workflow.
+This codebase is intentionally scoped to a narrow, visible remote-assistance workflow.
 
 - No persistence
 - No elevation
@@ -21,31 +21,32 @@ This codebase is intentionally scoped to a narrow, visible screen-sharing workfl
 - No mouse or keyboard injection
 - No lock-screen behavior
 - One viewer at a time
+- Plaintext LAN transport only
 
 ## Session flow
 
-1. Launch `ScreenShareHost` manually.
+1. Launch `AssistHost` manually.
 2. Read the 6-digit session code from the host window.
-3. Enter the host IP, port, and session code into `ScreenShareViewer`.
-4. The host receives the request and shows an allow/deny dialog.
-5. If allowed, the viewer requests a frame every 500 ms.
-6. Either side can end the session explicitly.
+3. Enter the host IP, port, session code, and helper name into `AssistViewer`.
+4. The host receives the request and shows an allow/deny dialog with a 30-second timeout.
+5. If allowed, the viewer requests a PNG frame every 500 ms.
+6. Ending the session closes the TCP connection; there is no explicit remote-control command channel.
 
 ## Project layout
 
 - `RemoteCtrl/RemoteCtrl/`: host app, consent dialog, banner window, server loop, screen capture
 - `RemoteCtrl/RemoteClient/`: viewer app, persistent client socket, watch dialog
-- `RemoteCtrl/ScreenShareProtocol.h`: shared protocol constants and command/status values
+- `RemoteCtrl/ScreenShareProtocol.h`: shared protocol constants, command ids, and `Hello` helpers
 - `RemoteCtrl/SharedPacket.h`: shared packet serialization and parsing
-- `RemoteCtrl/PacketTests/`: parser regression tests
+- `RemoteCtrl/PacketTests/`: parser and handshake regression tests
 - `RemoteCtrl/THREAT_MODEL.md`: current risks and assumptions
 
 ## Build
 
-Open `RemoteCtrl/RemoteCtrl.sln` in Visual Studio 2022 and build:
+Open `RemoteCtrl/RemoteAssist.sln` in Visual Studio 2022 and build:
 
-- `ScreenShareHost`
-- `ScreenShareViewer`
+- `AssistHost`
+- `AssistViewer`
 - `PacketTests`
 
 Recommended configurations:
@@ -57,9 +58,10 @@ Recommended configurations:
 
 - LAN only
 - Plaintext transport
-- No TLS or identity binding beyond the session code
+- No TLS or identity binding beyond the session code plus visible consent
 - No multi-viewer support
 - No reconnect or resume
+- Read-only PNG screen streaming only
 
 ## Legacy material
 

@@ -1,12 +1,12 @@
-# ScreenShare Project Guide
+# RemoteAssist Project Guide
 
 ## Overview
 
-This codebase is a visible, consent-gated LAN screen sharing sample.
+This codebase is a visible, consent-gated LAN remote-assistance sample.
 
-- `ScreenShareHost` runs on the machine being viewed.
-- `ScreenShareViewer` runs on the machine requesting access.
-- The viewer submits a 6-digit session code.
+- `AssistHost` runs on the machine being viewed.
+- `AssistViewer` runs on the machine requesting access.
+- The viewer sends a `Hello` handshake with a 6-digit session code and helper display name.
 - The host user must allow the request before frames are sent.
 - Frames are requested on a fixed 500 ms cadence.
 
@@ -19,16 +19,15 @@ Shared headers live at the solution root:
 - `RemoteCtrl/ScreenShareProtocol.h`
 - `RemoteCtrl/SharedPacket.h`
 
-Command IDs:
+Command ids:
 
 | Command | Direction | Meaning |
 |---|---|---|
-| `1001 SubmitSessionCode` | Viewer -> Host | Submit exactly 6 ASCII digits |
-| `1002 SessionStatus` | Host -> Viewer | Return auth/session state |
-| `6 SendScreen` | Viewer -> Host, Host -> Viewer | Empty request, PNG response |
-| `1003 EndSession` | Either direction | End the current session |
+| `1001 Hello` | Viewer -> Host | Send `<6 digits>\n<helper name>` in UTF-8 |
+| `1002 ConsentResult` | Host -> Viewer | Return auth/consent state |
+| `6 FrameRequest` | Viewer -> Host, Host -> Viewer | Empty request, PNG response |
 
-Session status payload values:
+Consent result payload values:
 
 | Value | Meaning |
 |---|---|
@@ -37,7 +36,7 @@ Session status payload values:
 | `2` | Host denied the request |
 | `3` | Host granted the request |
 | `4` | Host already has an active viewer |
-| `5` | Session ended |
+| `5` | Host did not answer before the consent timeout |
 
 ## Host architecture
 
@@ -55,6 +54,7 @@ Behavior:
 - Starts Winsock at app scope
 - Binds `INADDR_ANY:9527`
 - Shows local IPv4 addresses and the current 6-digit session code
+- Parses the viewer `Hello` payload before showing consent
 - Posts consent requests back to the UI thread
 - Shows a topmost banner while a session is active
 - Exposes tray actions for show, stop, and exit
@@ -71,22 +71,24 @@ Files:
 Behavior:
 
 - Connects to the host once per session
-- Sends the session code immediately after connect
-- Waits for `SessionStatus`
+- Sends the `Hello` payload immediately after connect
+- Waits for `ConsentResult`
 - Opens a modeless watch window after consent is granted
 - Requests the next frame every 500 ms
-- Sends `EndSession` when the watch window is closed locally
+- Closes the TCP connection when the watch window is closed locally
 
 ## Packet tests
 
 `RemoteCtrl/PacketTests/PacketTests.cpp` covers:
 
+- `Hello` payload validation
 - Complete packet parse
 - Fragmented header
-- Fragmented payload
+- Fragmented `Hello`
+- Fragmented `FrameRequest` payload
 - Two packets in one buffer
 - Bad checksum
-- Empty payload
+- Empty payload packet
 
 ## Legacy note
 

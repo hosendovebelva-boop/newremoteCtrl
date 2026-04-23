@@ -5,25 +5,27 @@
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
-IDD_REMOTECLIENT_DIALOG DIALOGEX 0, 0, 236, 118
+IDD_REMOTECLIENT_DIALOG DIALOGEX 0, 0, 248, 136
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_APPWINDOW
-CAPTION "Screen Share Viewer"
+CAPTION "Remote Assist Viewer"
 FONT 9, "Microsoft YaHei UI", 0, 0, 0x1
 BEGIN
     LTEXT           "Host IP",IDC_STATIC,12,14,36,8
     CONTROL         "",IDC_IPADDRESS_SERV,"SysIPAddress32",WS_TABSTOP,58,12,88,15
     LTEXT           "Port",IDC_STATIC,156,14,20,8
-    EDITTEXT        IDC_EDIT_PORT,182,12,40,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_PORT,186,12,40,14,ES_AUTOHSCROLL
     LTEXT           "Session Code",IDC_STATIC,12,40,46,8
-    EDITTEXT        IDC_EDIT_SESSION_CODE,58,38,88,14,ES_AUTOHSCROLL
-    PUSHBUTTON      "Connect",IDC_BTN_CONNECT,158,37,64,16
-    EDITTEXT        IDC_EDIT_STATUS,12,62,210,44,ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL,WS_EX_CLIENTEDGE
+    EDITTEXT        IDC_EDIT_SESSION_CODE,84,38,62,14,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "Helper Name",IDC_STATIC,12,64,52,8
+    EDITTEXT        IDC_EDIT_HELPER_NAME,84,62,142,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "Connect",IDC_BTN_CONNECT,162,37,64,16
+    EDITTEXT        IDC_EDIT_STATUS,12,88,214,36,ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL,WS_EX_CLIENTEDGE
 END
 
 IDD_DIG_WATCH DIALOGEX 0, 0, 320, 210
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Screen Share Viewer - Active Session"
+CAPTION "Remote Assist Viewer - Active Session"
 FONT 9, "Microsoft YaHei UI", 0, 0, 0x1
 BEGIN
     CONTROL         "",IDC_STATIC_WATCH_IMAGE,"Static",SS_BLACKFRAME,10,10,300,172
@@ -47,11 +49,11 @@ BEGIN
     BEGIN
         BLOCK "040904b0"
         BEGIN
-            VALUE "FileDescription", "ScreenShareViewer"
+            VALUE "FileDescription", "AssistViewer"
             VALUE "FileVersion", "1.0.0.1"
-            VALUE "InternalName", "ScreenShareViewer.exe"
-            VALUE "OriginalFilename", "ScreenShareViewer.exe"
-            VALUE "ProductName", "ScreenShareViewer"
+            VALUE "InternalName", "AssistViewer.exe"
+            VALUE "OriginalFilename", "AssistViewer.exe"
+            VALUE "ProductName", "RemoteAssist"
             VALUE "ProductVersion", "1.0.0.1"
         END
     END

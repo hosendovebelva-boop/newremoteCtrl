@@ -5,6 +5,21 @@
 #include <atlconv.h>
 #include <process.h>
 
+namespace
+{
+CString GetLocalHostName()
+{
+    WCHAR buffer[MAX_COMPUTERNAME_LENGTH + 1] = {};
+    DWORD length = _countof(buffer);
+    if (::GetComputerNameW(buffer, &length))
+    {
+        return CString(buffer);
+    }
+
+    return _T("Unknown host");
+}
+}
+
 CServerSocket::CServerSocket()
     : m_ownerWnd(nullptr),
       m_thread(nullptr),
@@ -34,6 +49,8 @@ bool CServerSocket::Start(HWND owner, const CString& sessionCode, UINT port)
     m_sessionState = SessionState::Idle;
     m_wrongAttempts = 0;
     m_endSessionRequested = false;
+    m_helperName.Empty();
+    m_endSessionDetail = _T("Session ended locally.");
     m_receiveBuffer.clear();
 
     m_listenSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -68,7 +85,7 @@ bool CServerSocket::Start(HWND owner, const CString& sessionCode, UINT port)
         return false;
     }
 
-    PostEvent(HostServerEventType::Listening, CString(), _T("Waiting for viewer"));
+    PostEvent(HostServerEventType::Listening, CString(), CString(), _T("Waiting for viewer"));
     return true;
 }
 
@@ -88,12 +105,13 @@ void CServerSocket::Stop()
     ResetClient();
 }
 
-void CServerSocket::EndSession()
+void CServerSocket::EndSession(const CString& detail)
 {
     std::lock_guard<std::mutex> guard(m_stateMutex);
     if (m_clientSocket != INVALID_SOCKET)
     {
         m_endSessionRequested = true;
+        m_endSessionDetail = detail;
     }
 }
 
@@ -107,6 +125,12 @@ CString CServerSocket::GetPeerIp() const
 {
     std::lock_guard<std::mutex> guard(m_stateMutex);
     return m_peerIp;
+}
+
+CString CServerSocket::GetHelperName() const
+{
+    std::lock_guard<std::mutex> guard(m_stateMutex);
+    return m_helperName;
 }
 
 bool CServerSocket::IsSharing() const
@@ -147,16 +171,21 @@ unsigned CServerSocket::Run()
 
         if (selectResult == SOCKET_ERROR)
         {
-            PostEvent(HostServerEventType::Error, GetPeerIp(), _T("Socket loop failed."));
+            PostEvent(HostServerEventType::Error, GetPeerIp(), CString(), _T("Socket loop failed."));
             break;
         }
 
         if (m_endSessionRequested && m_clientSocket != INVALID_SOCKET)
         {
             const CString peerIp = GetPeerIp();
-            SendPacket(m_clientSocket, CPacket(ScreenShareProtocol::EndSession, nullptr, 0));
+            const CString helperName = GetHelperName();
+            CString detail;
+            {
+                std::lock_guard<std::mutex> guard(m_stateMutex);
+                detail = m_endSessionDetail;
+            }
             ResetClient();
-            PostEvent(HostServerEventType::SessionEnded, peerIp, _T("Session ended locally."));
+            PostEvent(HostServerEventType::SessionEnded, peerIp, helperName, detail);
             continue;
         }
 
@@ -170,8 +199,9 @@ unsigned CServerSocket::Run()
             if (!ReceiveFromClient())
             {
                 const CString peerIp = GetPeerIp();
+                const CString helperName = GetHelperName();
                 ResetClient();
-                PostEvent(HostServerEventType::SessionEnded, peerIp, _T("Viewer disconnected."));
+                PostEvent(HostServerEventType::SessionEnded, peerIp, helperName, _T("Viewer disconnected."));
             }
         }
     }
@@ -194,7 +224,7 @@ void CServerSocket::AcceptClient()
     if (m_clientSocket != INVALID_SOCKET)
     {
         const BYTE busy = static_cast<BYTE>(ScreenShareProtocol::Busy);
-        CPacket busyPacket(ScreenShareProtocol::SessionStatus, &busy, sizeof(busy));
+        CPacket busyPacket(ScreenShareProtocol::ConsentResult, &busy, sizeof(busy));
         SendPacket(acceptedSocket, busyPacket);
         CloseSocket(acceptedSocket);
         return;
@@ -207,10 +237,13 @@ void CServerSocket::AcceptClient()
         std::lock_guard<std::mutex> guard(m_stateMutex);
         m_clientSocket = acceptedSocket;
         m_peerIp = CA2T(ipBuffer);
-        m_sessionState = SessionState::AwaitingCode;
+        m_helperName.Empty();
+        m_sessionState = SessionState::AwaitingHello;
         m_wrongAttempts = 0;
         m_receiveBuffer.clear();
     }
+
+    PostEvent(HostServerEventType::Listening, GetPeerIp(), CString(), _T("Incoming viewer connection"));
 }
 
 bool CServerSocket::ReceiveFromClient()
@@ -252,18 +285,27 @@ bool CServerSocket::ReceiveFromClient()
 
 void CServerSocket::HandlePacket(const CPacket& packet)
 {
-    if (m_sessionState == SessionState::AwaitingCode)
+    if (m_sessionState == SessionState::AwaitingHello)
     {
-        if (packet.Command() != ScreenShareProtocol::SubmitSessionCode)
+        if (packet.Command() != ScreenShareProtocol::Hello)
         {
             ResetClient();
-            PostEvent(HostServerEventType::SessionEnded, CString(), _T("Viewer sent an unexpected command."));
+            PostEvent(HostServerEventType::SessionEnded, CString(), CString(), _T("Viewer sent an unexpected command."));
             return;
         }
 
-        const std::string code = packet.Payload();
+        ScreenShareProtocol::HelloPayload hello;
+        if (!ScreenShareProtocol::ParseHelloPayload(packet.Payload(), hello))
+        {
+            const CString peerIp = GetPeerIp();
+            ResetClient();
+            PostEvent(HostServerEventType::SessionEnded, peerIp, CString(), _T("Viewer sent an invalid hello payload."));
+            return;
+        }
+
         const CString expectedCode = CurrentSessionCode();
-        if (!ScreenShareProtocol::IsValidSessionCode(code) || CString(CA2T(code.c_str())) != expectedCode)
+        const CString submittedCode(CA2T(hello.sessionCode.c_str()));
+        if (submittedCode != expectedCode)
         {
             ++m_wrongAttempts;
             ::Sleep(500);
@@ -271,77 +313,81 @@ void CServerSocket::HandlePacket(const CPacket& packet)
             if (m_wrongAttempts >= ScreenShareProtocol::kMaxSessionCodeAttempts)
             {
                 const CString peerIp = GetPeerIp();
+                const CString helperName(CA2W(hello.helperName.c_str(), CP_UTF8));
                 ResetClient();
-                PostEvent(HostServerEventType::SessionEnded, peerIp, _T("Too many incorrect session codes."));
+                PostEvent(HostServerEventType::SessionEnded, peerIp, helperName, _T("Too many incorrect session codes."));
             }
             return;
         }
 
+        const CString helperName(CA2W(hello.helperName.c_str(), CP_UTF8));
         {
             std::lock_guard<std::mutex> guard(m_stateMutex);
+            m_helperName = helperName;
             m_sessionState = SessionState::WaitingForConsent;
         }
-        SendStatus(ScreenShareProtocol::CodeAcceptedWaitingConsent);
-        PostEvent(HostServerEventType::WaitingForConsent, GetPeerIp(), _T("Waiting for local approval"));
-        if (RequestConsent())
+        SendStatus(ScreenShareProtocol::WaitingForConsent);
+        PostEvent(HostServerEventType::WaitingForConsent, GetPeerIp(), helperName, _T("Waiting for local approval"));
+
+        const ScreenShareProtocol::Status consentStatus = RequestConsent();
+        if (consentStatus == ScreenShareProtocol::Approved)
         {
             {
                 std::lock_guard<std::mutex> guard(m_stateMutex);
                 m_sessionState = SessionState::Sharing;
             }
-            SendStatus(ScreenShareProtocol::ConsentGranted);
-            PostEvent(HostServerEventType::SharingStarted, GetPeerIp(), _T("Screen sharing active"));
+            SendStatus(ScreenShareProtocol::Approved);
+            PostEvent(HostServerEventType::SharingStarted, GetPeerIp(), helperName, _T("Screen sharing active"));
         }
         else
         {
-            SendStatus(ScreenShareProtocol::ConsentDenied);
+            SendStatus(consentStatus);
             const CString peerIp = GetPeerIp();
             ResetClient();
-            PostEvent(HostServerEventType::SessionEnded, peerIp, _T("Local user denied the request."));
+            const CString detail =
+                (consentStatus == ScreenShareProtocol::TimedOut) ? _T("Consent request timed out.") : _T("Local user denied the request.");
+            PostEvent(HostServerEventType::SessionEnded, peerIp, helperName, detail);
         }
         return;
     }
 
     if (m_sessionState == SessionState::Sharing)
     {
-        if (packet.Command() == ScreenShareProtocol::SendScreen)
+        if (packet.Command() == ScreenShareProtocol::FrameRequest && packet.Payload().empty())
         {
             std::string pngBytes;
             if (CapturePrimaryMonitorPng(pngBytes))
             {
-                SendPacket(m_clientSocket, CPacket(ScreenShareProtocol::SendScreen, pngBytes));
+                SendPacket(m_clientSocket, CPacket(ScreenShareProtocol::FrameRequest, pngBytes));
             }
             return;
         }
 
-        if (packet.Command() == ScreenShareProtocol::EndSession)
-        {
-            const CString peerIp = GetPeerIp();
-            ResetClient();
-            PostEvent(HostServerEventType::SessionEnded, peerIp, _T("Viewer ended the session."));
-            return;
-        }
+        const CString peerIp = GetPeerIp();
+        const CString helperName = GetHelperName();
+        ResetClient();
+        PostEvent(HostServerEventType::SessionEnded, peerIp, helperName, _T("Viewer sent an unexpected command."));
     }
 }
 
-bool CServerSocket::RequestConsent()
+ScreenShareProtocol::Status CServerSocket::RequestConsent()
 {
     if (!::IsWindow(m_ownerWnd))
     {
-        return false;
+        return ScreenShareProtocol::Denied;
     }
 
-    ConsentRequest* request = new ConsentRequest(GetPeerIp());
+    ConsentRequest* request = new ConsentRequest(GetPeerIp(), CurrentHelperName(), CurrentSessionCode(), GetLocalHostName());
     if (!::PostMessage(m_ownerWnd, WM_HOST_CONSENT_REQUEST, 0, reinterpret_cast<LPARAM>(request)))
     {
         delete request;
-        return false;
+        return ScreenShareProtocol::Denied;
     }
 
     ::WaitForSingleObject(request->completedEvent, INFINITE);
-    const bool allowed = request->allowed;
+    const ScreenShareProtocol::Status result = request->result;
     delete request;
-    return allowed;
+    return result;
 }
 
 void CServerSocket::ResetClient()
@@ -349,9 +395,11 @@ void CServerSocket::ResetClient()
     CloseSocket(m_clientSocket);
     std::lock_guard<std::mutex> guard(m_stateMutex);
     m_peerIp.Empty();
+    m_helperName.Empty();
     m_sessionState = SessionState::Idle;
     m_wrongAttempts = 0;
     m_endSessionRequested = false;
+    m_endSessionDetail = _T("Session ended locally.");
     m_receiveBuffer.clear();
 }
 
@@ -392,7 +440,7 @@ bool CServerSocket::SendPacket(SOCKET socket, const CPacket& packet)
 bool CServerSocket::SendStatus(ScreenShareProtocol::Status status)
 {
     const BYTE rawStatus = static_cast<BYTE>(status);
-    return SendPacket(m_clientSocket, CPacket(ScreenShareProtocol::SessionStatus, &rawStatus, sizeof(rawStatus)));
+    return SendPacket(m_clientSocket, CPacket(ScreenShareProtocol::ConsentResult, &rawStatus, sizeof(rawStatus)));
 }
 
 CString CServerSocket::CurrentSessionCode() const
@@ -401,13 +449,19 @@ CString CServerSocket::CurrentSessionCode() const
     return m_sessionCode;
 }
 
-void CServerSocket::PostEvent(HostServerEventType type, const CString& peerIp, const CString& detail) const
+CString CServerSocket::CurrentHelperName() const
+{
+    std::lock_guard<std::mutex> guard(m_stateMutex);
+    return m_helperName;
+}
+
+void CServerSocket::PostEvent(const HostServerEventType type, const CString& peerIp, const CString& helperName, const CString& detail) const
 {
     if (!::IsWindow(m_ownerWnd))
     {
         return;
     }
 
-    HostServerEventPayload* payload = new HostServerEventPayload{type, peerIp, detail};
+    HostServerEventPayload* payload = new HostServerEventPayload{type, peerIp, helperName, detail};
     ::PostMessage(m_ownerWnd, WM_HOST_SERVER_EVENT, 0, reinterpret_cast<LPARAM>(payload));
 }

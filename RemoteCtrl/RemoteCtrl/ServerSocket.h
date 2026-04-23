@@ -27,13 +27,19 @@ struct HostServerEventPayload
 {
     HostServerEventType type;
     CString peerIp;
+    CString helperName;
     CString detail;
 };
 
 struct ConsentRequest
 {
-    explicit ConsentRequest(const CString& viewerIp)
-        : peerIp(viewerIp), completedEvent(::CreateEvent(nullptr, TRUE, FALSE, nullptr)), allowed(false)
+    ConsentRequest(const CString& viewerIp, const CString& viewerName, const CString& codeText, const CString& hostMachineName)
+        : peerIp(viewerIp),
+          helperName(viewerName),
+          sessionCode(codeText),
+          hostName(hostMachineName),
+          completedEvent(::CreateEvent(nullptr, TRUE, FALSE, nullptr)),
+          result(ScreenShareProtocol::Denied)
     {
     }
 
@@ -47,8 +53,11 @@ struct ConsentRequest
     }
 
     CString peerIp;
+    CString helperName;
+    CString sessionCode;
+    CString hostName;
     HANDLE completedEvent;
-    bool allowed;
+    ScreenShareProtocol::Status result;
 };
 
 class CServerSocket
@@ -59,16 +68,17 @@ public:
 
     bool Start(HWND owner, const CString& sessionCode, UINT port = ScreenShareProtocol::kDefaultPort);
     void Stop();
-    void EndSession();
+    void EndSession(const CString& detail = _T("Session ended locally."));
     void SetSessionCode(const CString& sessionCode);
     CString GetPeerIp() const;
+    CString GetHelperName() const;
     bool IsSharing() const;
 
 private:
     enum class SessionState
     {
         Idle,
-        AwaitingCode,
+        AwaitingHello,
         WaitingForConsent,
         Sharing,
     };
@@ -78,13 +88,18 @@ private:
     void AcceptClient();
     bool ReceiveFromClient();
     void HandlePacket(const CPacket& packet);
-    bool RequestConsent();
+    ScreenShareProtocol::Status RequestConsent();
     void ResetClient();
     void CloseSocket(SOCKET& socket);
     bool SendPacket(SOCKET socket, const CPacket& packet);
     bool SendStatus(ScreenShareProtocol::Status status);
     CString CurrentSessionCode() const;
-    void PostEvent(HostServerEventType type, const CString& peerIp = CString(), const CString& detail = CString()) const;
+    CString CurrentHelperName() const;
+    void PostEvent(
+        HostServerEventType type,
+        const CString& peerIp = CString(),
+        const CString& helperName = CString(),
+        const CString& detail = CString()) const;
 
     HWND m_ownerWnd;
     HANDLE m_thread;
@@ -96,7 +111,9 @@ private:
     UINT m_wrongAttempts;
     std::atomic_bool m_endSessionRequested;
     CString m_peerIp;
+    CString m_helperName;
     CString m_sessionCode;
+    CString m_endSessionDetail;
     std::vector<char> m_receiveBuffer;
     mutable std::mutex m_stateMutex;
     std::mutex m_sendMutex;

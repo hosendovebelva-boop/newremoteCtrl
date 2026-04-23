@@ -3,11 +3,11 @@
     "Name": "New launch profile",
     "Projects": [
       {
-        "Path": "RemoteCtrl\\RemoteCtrl.vcxproj",
+        "Path": "RemoteCtrl\\AssistHost.vcxproj",
         "Action": "Start"
       },
       {
-        "Path": "RemoteClient\\RemoteClient.vcxproj",
+        "Path": "RemoteClient\\AssistViewer.vcxproj",
         "Action": "Start"
       }
     ]

@@ -1,4 +1,4 @@
-# Threat Model
+# RemoteAssist Threat Model
 
 ## Intended environment
 
@@ -26,7 +26,7 @@ Traffic is not encrypted. Anyone on the same network path can observe the packet
 
 ### Session code is not identity
 
-The 6-digit code is a per-session gate, not a cryptographic identity check. A local attacker could guess it if they can repeatedly connect.
+The 6-digit code plus helper display name is a visible session gate, not a cryptographic identity check. A local attacker could guess the code if they can repeatedly connect.
 
 ### Limited brute-force resistance
 
@@ -53,5 +53,6 @@ The current capture path uses the primary monitor only.
 
 - Keep usage to trusted LAN environments.
 - Do not expose the host port to the public internet.
-- Read the session code aloud only to the intended viewer.
+- Share the session code only with the intended helper.
+- Confirm the helper name in the consent dialog before approving.
 - End the session when you are done instead of leaving the host running unnecessarily.

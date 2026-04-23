@@ -39,6 +39,7 @@ private:
     DWORD m_serverAddress;
     CString m_portText;
     CString m_sessionCode;
+    CString m_helperName;
     CClientSocket m_socket;
     CWatchDialog m_watchDialog;
     bool m_framePending;
