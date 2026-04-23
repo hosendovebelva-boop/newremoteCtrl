@@ -156,6 +156,8 @@
     <ClInclude Include="Resource.h" />
     <ClInclude Include="ScreenCapture.h" />
     <ClInclude Include="ServerSocket.h" />
+    <ClInclude Include="SessionLog.h" />
+    <ClInclude Include="SessionPolicy.h" />
     <ClInclude Include="ShareBannerWnd.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
@@ -171,6 +173,8 @@
     <ClCompile Include="RemoteCtrl.cpp" />
     <ClCompile Include="ScreenCapture.cpp" />
     <ClCompile Include="ServerSocket.cpp" />
+    <ClCompile Include="SessionLog.cpp" />
+    <ClCompile Include="SessionPolicy.cpp" />
     <ClCompile Include="ShareBannerWnd.cpp" />
   </ItemGroup>
   <ItemGroup>

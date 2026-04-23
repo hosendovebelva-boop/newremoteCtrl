@@ -17,6 +17,10 @@
 - No file transfer or deletion
 - No input injection
 - No lock-screen behavior
+- Per-stream consent state for future screen, microphone, and camera streams
+- Persistent host-side banner while screen sharing is active
+- Append-only local session log
+- 60-minute default session limit with local-only extension
 
 ## Remaining risks
 
@@ -39,6 +43,10 @@ The packet checksum only protects parser integrity. It is not authentication and
 ### Single-monitor assumptions
 
 The current capture path uses the primary monitor only.
+
+### Local log integrity
+
+The session log is append-only by application behavior, but it is a local user-writable text file and is not tamper-proof.
 
 ## Non-goals
 

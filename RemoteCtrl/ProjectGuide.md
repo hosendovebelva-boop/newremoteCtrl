@@ -77,6 +77,14 @@ Behavior:
 - Requests the next frame every 500 ms
 - Closes the TCP connection when the watch window is closed locally
 
+## Safety rails
+
+- `SessionPolicy.*` owns stream consent state for screen, microphone, and camera.
+- Only screen is implemented; microphone and camera remain inactive placeholders.
+- `ShareBannerWnd.*` shows the always-on-top host banner, screen/microphone indicators, remaining time, and the end-session affordance.
+- `SessionLog.*` appends join, consent, start, end, extension, and expiration events to `%LOCALAPPDATA%\AssistHost\sessions.log`.
+- Host sessions have a 60-minute default limit and can be extended locally in 15-minute increments.
+
 ## Packet tests
 
 `RemoteCtrl/PacketTests/PacketTests.cpp` covers:

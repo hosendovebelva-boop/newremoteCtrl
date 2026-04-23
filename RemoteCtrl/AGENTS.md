@@ -26,6 +26,8 @@ This repository is a consent-based remote-assistance sample. It is not a remote-
 - The consent dialog auto-denies after 30 seconds
 - Viewer can only request screenshots
 - Viewer requests frames every 500 ms
+- Host shows a persistent banner and session log while sharing
+- Host sessions expire after 60 minutes unless locally extended
 - Ending a session closes the TCP connection
 
 ## Explicitly removed capabilities

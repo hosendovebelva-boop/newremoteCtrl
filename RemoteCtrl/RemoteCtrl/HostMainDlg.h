@@ -2,6 +2,7 @@
 
 #include "resource.h"
 #include "ServerSocket.h"
+#include "SessionPolicy.h"
 #include "ShareBannerWnd.h"
 
 #include "afxdialogex.h"
@@ -26,6 +27,8 @@ protected:
     afx_msg LRESULT OnConsentRequest(WPARAM wParam, LPARAM lParam);
     afx_msg LRESULT OnBannerEndSession(WPARAM wParam, LPARAM lParam);
     afx_msg LRESULT OnTrayIcon(WPARAM wParam, LPARAM lParam);
+    afx_msg void OnBnClickedExtendSession();
+    afx_msg void OnTimer(UINT_PTR eventId);
 
     DECLARE_MESSAGE_MAP()
 
@@ -42,10 +45,18 @@ private:
     void ConfigureTrayIcon();
     void RemoveTrayIcon();
     void ShowTrayMenu();
+    void StartSession(const HostServerEventPayload& payload);
+    void StopSession(const HostServerEventPayload& payload);
+    void RefreshRecentSessions();
+    void RefreshSessionTimerUi();
+    void AppendSessionLog(const CString& eventType, const CString& detail, const CString& helperName = CString(), const CString& peerIp = CString());
 
     HICON m_icon;
     CServerSocket m_server;
     CShareBannerWnd m_banner;
+    CSessionPolicy m_sessionPolicy;
     NOTIFYICONDATA m_trayData;
     CString m_sessionCode;
+    CString m_activeHelperName;
+    CString m_activePeerIp;
 };

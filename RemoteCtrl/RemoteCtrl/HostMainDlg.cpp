@@ -3,6 +3,7 @@
 
 #include "ConsentDialog.h"
 #include "EdoyunTool.h"
+#include "SessionLog.h"
 #include "..\ScreenShareProtocol.h"
 
 #include <memory>
@@ -34,6 +35,8 @@ BOOL CHostMainDlg::OnInitDialog()
     RefreshSessionCode();
     UpdateStatus(_T("Waiting for viewer"));
     GetDlgItem(IDC_BTN_STOP_SHARING)->EnableWindow(FALSE);
+    GetDlgItem(IDC_BTN_EXTEND_SESSION)->EnableWindow(FALSE);
+    RefreshRecentSessions();
 
     ConfigureTrayIcon();
 
@@ -48,6 +51,7 @@ BOOL CHostMainDlg::OnInitDialog()
 void CHostMainDlg::OnCancel()
 {
     m_banner.HideBanner();
+    KillTimer(CSessionPolicy::kTimerId);
     RemoveTrayIcon();
     m_server.Stop();
     CDialogEx::OnCancel();
@@ -70,37 +74,33 @@ LRESULT CHostMainDlg::OnServerEvent(WPARAM wParam, LPARAM lParam)
     switch (payload->type)
     {
     case HostServerEventType::Listening:
-        UpdateStatus(_T("Waiting for viewer"));
-        GetDlgItem(IDC_BTN_STOP_SHARING)->EnableWindow(FALSE);
+        if (!payload->peerIp.IsEmpty())
+        {
+            AppendSessionLog(_T("connect_attempt"), payload->detail, payload->helperName, payload->peerIp);
+        }
+        if (!m_sessionPolicy.IsActive())
+        {
+            UpdateStatus(_T("Waiting for viewer"));
+            GetDlgItem(IDC_BTN_STOP_SHARING)->EnableWindow(FALSE);
+            GetDlgItem(IDC_BTN_EXTEND_SESSION)->EnableWindow(FALSE);
+        }
         break;
     case HostServerEventType::WaitingForConsent:
+        AppendSessionLog(_T("consent_shown"), payload->detail, payload->helperName, payload->peerIp);
         UpdateStatus(_T("Waiting for local approval..."));
         break;
     case HostServerEventType::SharingStarted:
-    {
-        CString title;
-        const CString displayName = payload->helperName.IsEmpty() ? payload->peerIp : payload->helperName;
-        title.Format(_T("Remote Assist Host - Sharing with %s"), displayName.GetString());
-        SetWindowText(title);
-        CString status;
-        status.Format(_T("Sharing with %s (%s)"), displayName.GetString(), payload->peerIp.GetString());
-        UpdateStatus(status);
-        GetDlgItem(IDC_BTN_STOP_SHARING)->EnableWindow(TRUE);
-        m_banner.EnsureCreated(m_hWnd);
-        m_banner.ShowBanner(payload->peerIp);
+        StartSession(*payload);
         break;
-    }
     case HostServerEventType::SessionEnded:
-        SetWindowText(_T("Remote Assist Host - Waiting for viewer"));
-        m_banner.HideBanner();
-        GetDlgItem(IDC_BTN_STOP_SHARING)->EnableWindow(FALSE);
-        RefreshSessionCode();
-        UpdateStatus(_T("Waiting for viewer"));
+        StopSession(*payload);
         break;
     case HostServerEventType::Error:
+        AppendSessionLog(_T("socket_error"), payload->detail, payload->helperName, payload->peerIp);
         SetWindowText(_T("Remote Assist Host - Waiting for viewer"));
         m_banner.HideBanner();
         GetDlgItem(IDC_BTN_STOP_SHARING)->EnableWindow(FALSE);
+        GetDlgItem(IDC_BTN_EXTEND_SESSION)->EnableWindow(FALSE);
         RefreshSessionCode();
         UpdateStatus(payload->detail.IsEmpty() ? _T("Socket error.") : payload->detail);
         break;
@@ -124,6 +124,15 @@ LRESULT CHostMainDlg::OnConsentRequest(WPARAM wParam, LPARAM lParam)
     dialog.SetRequestDetails(request->peerIp, request->helperName, request->sessionCode, request->hostName);
     request->result = (dialog.DoModal() == IDOK) ? ScreenShareProtocol::Approved
                                                  : (dialog.WasTimedOut() ? ScreenShareProtocol::TimedOut : ScreenShareProtocol::Denied);
+    AppendSessionLog(
+        request->result == ScreenShareProtocol::Approved ? _T("consent_approved")
+                                                         : (request->result == ScreenShareProtocol::TimedOut ? _T("consent_timed_out")
+                                                                                                             : _T("consent_denied")),
+        request->result == ScreenShareProtocol::Approved ? _T("Screen stream approved.")
+                                                         : (request->result == ScreenShareProtocol::TimedOut ? _T("Consent dialog timed out.")
+                                                                                                             : _T("Host denied screen sharing.")),
+        request->helperName,
+        request->peerIp);
     ::SetEvent(request->completedEvent);
     return 0;
 }
@@ -156,6 +165,44 @@ LRESULT CHostMainDlg::OnTrayIcon(WPARAM wParam, LPARAM lParam)
     return 0;
 }
 
+void CHostMainDlg::OnBnClickedExtendSession()
+{
+    if (!m_sessionPolicy.IsActive())
+    {
+        return;
+    }
+
+    m_sessionPolicy.Extend();
+    AppendSessionLog(_T("session_extended"), _T("Host extended the session by 15 minutes."));
+    RefreshSessionTimerUi();
+    RefreshRecentSessions();
+}
+
+void CHostMainDlg::OnTimer(UINT_PTR eventId)
+{
+    if (eventId == CSessionPolicy::kTimerId)
+    {
+        if (m_sessionPolicy.IsExpired())
+        {
+            AppendSessionLog(_T("session_expired"), _T("60-minute session limit reached."));
+            m_server.EndSession(_T("Session expired."));
+            return;
+        }
+
+        if (m_sessionPolicy.ShouldPromptForExtension())
+        {
+            m_sessionPolicy.MarkExtensionPrompted();
+            GetDlgItem(IDC_BTN_EXTEND_SESSION)->EnableWindow(TRUE);
+            UpdateStatus(_T("Session will expire soon. Host can extend by 15 minutes."));
+        }
+
+        RefreshSessionTimerUi();
+        return;
+    }
+
+    CDialogEx::OnTimer(eventId);
+}
+
 void CHostMainDlg::RefreshSessionCode()
 {
     m_sessionCode = CEdoyunTool::GenerateSessionCode();
@@ -166,6 +213,82 @@ void CHostMainDlg::RefreshSessionCode()
 void CHostMainDlg::UpdateStatus(const CString& statusText)
 {
     SetDlgItemText(IDC_STATIC_STATUS_VALUE, statusText);
+}
+
+void CHostMainDlg::StartSession(const HostServerEventPayload& payload)
+{
+    m_activeHelperName = payload.helperName;
+    m_activePeerIp = payload.peerIp;
+    m_sessionPolicy.Start();
+
+    const CString displayName = m_activeHelperName.IsEmpty() ? m_activePeerIp : m_activeHelperName;
+    CString title;
+    title.Format(_T("Remote Assist Host - Sharing with %s"), displayName.GetString());
+    SetWindowText(title);
+
+    CString status;
+    status.Format(_T("Sharing with %s (%s)"), displayName.GetString(), m_activePeerIp.GetString());
+    UpdateStatus(status);
+    GetDlgItem(IDC_BTN_STOP_SHARING)->EnableWindow(TRUE);
+    GetDlgItem(IDC_BTN_EXTEND_SESSION)->EnableWindow(FALSE);
+
+    m_banner.EnsureCreated(m_hWnd);
+    m_banner.ShowBanner(
+        m_activeHelperName,
+        m_activePeerIp,
+        m_sessionPolicy.GetStreamConsent(AssistStreamId::Screen) == AssistStreamConsent::Approved,
+        false,
+        m_sessionPolicy.RemainingSeconds());
+    SetTimer(CSessionPolicy::kTimerId, CSessionPolicy::kTimerIntervalMs, nullptr);
+
+    AppendSessionLog(_T("session_started"), payload.detail);
+    RefreshRecentSessions();
+}
+
+void CHostMainDlg::StopSession(const HostServerEventPayload& payload)
+{
+    const CString detail = payload.detail.IsEmpty() ? _T("Session ended.") : payload.detail;
+    const CString eventType = detail == _T("Session expired.") ? _T("session_expired")
+                                                              : (detail == _T("Session ended locally.") ? _T("session_ended_locally")
+                                                                                                      : _T("session_disconnected"));
+    AppendSessionLog(eventType, detail, payload.helperName, payload.peerIp);
+
+    KillTimer(CSessionPolicy::kTimerId);
+    m_sessionPolicy.Stop();
+    m_activeHelperName.Empty();
+    m_activePeerIp.Empty();
+    SetWindowText(_T("Remote Assist Host - Waiting for viewer"));
+    m_banner.HideBanner();
+    GetDlgItem(IDC_BTN_STOP_SHARING)->EnableWindow(FALSE);
+    GetDlgItem(IDC_BTN_EXTEND_SESSION)->EnableWindow(FALSE);
+    RefreshSessionCode();
+    UpdateStatus(_T("Waiting for viewer"));
+    RefreshRecentSessions();
+}
+
+void CHostMainDlg::RefreshRecentSessions()
+{
+    SetDlgItemText(IDC_EDIT_RECENT_SESSIONS, CSessionLog::ReadRecentSessions());
+}
+
+void CHostMainDlg::RefreshSessionTimerUi()
+{
+    if (!m_sessionPolicy.IsActive())
+    {
+        return;
+    }
+
+    m_banner.UpdateIndicators(
+        m_sessionPolicy.GetStreamConsent(AssistStreamId::Screen) == AssistStreamConsent::Approved,
+        false,
+        m_sessionPolicy.RemainingSeconds());
+}
+
+void CHostMainDlg::AppendSessionLog(const CString& eventType, const CString& detail, const CString& helperName, const CString& peerIp)
+{
+    const CString logHelperName = helperName.IsEmpty() ? m_activeHelperName : helperName;
+    const CString logPeerIp = peerIp.IsEmpty() ? m_activePeerIp : peerIp;
+    CSessionLog::AppendEvent(logHelperName, logPeerIp, eventType, detail);
 }
 
 void CHostMainDlg::ConfigureTrayIcon()
@@ -220,8 +343,10 @@ void CHostMainDlg::ShowTrayMenu()
 
 BEGIN_MESSAGE_MAP(CHostMainDlg, CDialogEx)
     ON_BN_CLICKED(IDC_BTN_STOP_SHARING, &CHostMainDlg::OnBnClickedStopSharing)
+    ON_BN_CLICKED(IDC_BTN_EXTEND_SESSION, &CHostMainDlg::OnBnClickedExtendSession)
     ON_MESSAGE(WM_HOST_SERVER_EVENT, &CHostMainDlg::OnServerEvent)
     ON_MESSAGE(WM_HOST_CONSENT_REQUEST, &CHostMainDlg::OnConsentRequest)
     ON_MESSAGE(WM_HOST_BANNER_END_SESSION, &CHostMainDlg::OnBannerEndSession)
     ON_MESSAGE(WM_HOST_TRAYICON, &CHostMainDlg::OnTrayIcon)
+    ON_WM_TIMER()
 END_MESSAGE_MAP()

@@ -22,6 +22,9 @@ This codebase is intentionally scoped to a narrow, visible remote-assistance wor
 - No lock-screen behavior
 - One viewer at a time
 - Plaintext LAN transport only
+- Persistent host banner during active sessions
+- Append-only session log at `%LOCALAPPDATA%\AssistHost\sessions.log`
+- 60-minute default session limit with host-only 15-minute extensions
 
 ## Session flow
 
@@ -31,6 +34,7 @@ This codebase is intentionally scoped to a narrow, visible remote-assistance wor
 4. The host receives the request and shows an allow/deny dialog with a 30-second timeout.
 5. If allowed, the viewer requests a PNG frame every 500 ms.
 6. Ending the session closes the TCP connection; there is no explicit remote-control command channel.
+7. The host banner shows stream indicators and an end-session affordance until sharing stops.
 
 ## Project layout
 
@@ -62,6 +66,7 @@ Recommended configurations:
 - No multi-viewer support
 - No reconnect or resume
 - Read-only PNG screen streaming only
+- Microphone and camera are modeled for future per-stream consent but are not implemented
 
 ## Legacy material
 
