@@ -1,50 +1,56 @@
-# Repository Guidelines
+# AGENTS.md
 
-## Project Structure & Module Organization
-`RemoteCtrl.sln` contains two Visual Studio C++ projects:
+## Repository summary
 
-- `RemoteCtrl/`: server-side application. Core networking and command handling live in `ServerSocket.*`, `Command.*`, and `Packet.h`.
-- `RemoteClient/`: MFC client UI. Dialog classes live in `*Dlg.*`, controller/socket logic in `ClientController.*` and `CClientSocket.*`, and assets in `RemoteClient/res/`.
+`RemoteCtrl/RemoteCtrl.sln` now builds three projects:
 
-Shared build scaffolding such as `pch.h`, `framework.h`, `.rc`, and `resource.h` stays inside each project directory. Top-level design artifacts (`*.mdj`, project notes, screenshots) are reference material, not runtime code.
+- `ScreenShareHost`
+- `ScreenShareViewer`
+- `PacketTests`
 
+This repository is a consent-based screen sharing sample. It is no longer a remote-administration or remote-control tool.
 
-## Build, Test, and Development Commands
-Use Visual Studio 2022 with the `v143` toolset and Windows SDK 10.0.
+## Source layout
 
-```powershell
-msbuild .\RemoteCtrl.sln /p:Configuration=Debug /p:Platform=x64
-msbuild .\RemoteCtrl.sln /p:Configuration=Release /p:Platform=x64
-devenv .\RemoteCtrl.sln
-```
+- `RemoteCtrl/`: host-side MFC app
+- `RemoteClient/`: viewer-side MFC app
+- `ScreenShareProtocol.h`: shared command/status constants
+- `SharedPacket.h`: shared packet serializer/parser
+- `PacketTests/`: packet parser test project
 
-The first two commands build both projects in Debug or Release. `devenv` opens the full solution for interactive debugging, resource editing, and MFC designer work.
+## Active behaviors
 
-## Coding Style & Naming Conventions
-Follow the existing C++/MFC style:
+- Host is always visible
+- Viewer must submit a 6-digit session code
+- Host must explicitly allow the request
+- Viewer can only request screenshots
+- Viewer requests frames every 500 ms
+- Either side can end the session
 
-- Use tabs for indentation and keep braces on their own lines.
-- Keep class names in `PascalCase` with the existing `C` prefix for MFC-style types, for example `CClientController`.
-- Use member prefixes already present in the codebase: `m_` for members, `n` for integers, `b` for booleans, `str` for strings, and `p` for pointers.
-- Prefer one class per header/source pair and keep resource identifiers in `resource.h`.
+## Explicitly removed capabilities
 
-There is no formatter config in the repo, so match nearby code before submitting changes.
+- Persistence
+- Elevation
+- Remote execution
+- File system control
+- Mouse control
+- Lock-screen behavior
 
-## Testing Guidelines
-There is currently no automated test project or test framework checked in. Validate changes by building both `Debug|x64` and `Release|x64`, then smoke-test the client/server flow manually: connect, issue commands, verify file operations, and confirm UI dialogs still behave correctly.
+## Build notes
 
-## Commit & Pull Request Guidelines
-Recent commits use short, task-focused summaries, often numbered to group related changes. Keep commits scoped and descriptive, for example `1 refactor client controller 2 fix download dialog state`.
+Open `RemoteCtrl/RemoteCtrl.sln` in Visual Studio 2022.
 
-Pull requests should include:
+Primary configs:
 
-- a brief summary of behavior changes
-- affected project(s): `RemoteCtrl`, `RemoteClient`, or both
-- manual verification steps
-- screenshots for UI or dialog changes
-- linked issue or design note when available
+- `Debug|x64`
+- `Release|x64`
 
-## File Location Link Output Template
-- Standard clickable format: `[absolute_path:line_number](/absolute_path#Lline_number)`; Example: `[{{ABS_PATH}}:{{LINE}}](/{{ABS_PATH}}#L{{LINE}})`
-- Path requirements: Absolute path, use `/`, no quotes.
+## Review notes
 
+When reviewing changes, prioritize:
+
+- shared packet correctness
+- session code and consent flow
+- host visibility guarantees
+- viewer frame pacing and read-only behavior
+- regressions that accidentally reintroduce remote-control capability

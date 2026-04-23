@@ -3,14 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.13.35931.197
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RemoteCtrl", "RemoteCtrl\RemoteCtrl.vcxproj", "{FCEB919E-005E-498E-987F-FFB574426105}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ScreenShareHost", "RemoteCtrl\RemoteCtrl.vcxproj", "{FCEB919E-005E-498E-987F-FFB574426105}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RemoteClient", "RemoteClient\RemoteClient.vcxproj", "{533FAB59-4BC3-149E-9558-9A012AF1739A}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ScreenShareViewer", "RemoteClient\RemoteClient.vcxproj", "{533FAB59-4BC3-149E-9558-9A012AF1739A}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{9FA3D6BD-1EC1-3BA5-80CB-CE02773A58D5}"
-	ProjectSection(SolutionItems) = preProject
-		RemoteControlSystemDesign.mdj = RemoteControlSystemDesign.mdj
-	EndProjectSection
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PacketTests", "PacketTests\PacketTests.vcxproj", "{E1D35A16-9C54-4D9B-8C8F-1A72AF0C9411}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -36,6 +33,14 @@ Global
 		{533FAB59-4BC3-149E-9558-9A012AF1739A}.Release|x64.Build.0 = Release|x64
 		{533FAB59-4BC3-149E-9558-9A012AF1739A}.Release|x86.ActiveCfg = Release|Win32
 		{533FAB59-4BC3-149E-9558-9A012AF1739A}.Release|x86.Build.0 = Release|Win32
+		{E1D35A16-9C54-4D9B-8C8F-1A72AF0C9411}.Debug|x64.ActiveCfg = Debug|x64
+		{E1D35A16-9C54-4D9B-8C8F-1A72AF0C9411}.Debug|x64.Build.0 = Debug|x64
+		{E1D35A16-9C54-4D9B-8C8F-1A72AF0C9411}.Debug|x86.ActiveCfg = Debug|Win32
+		{E1D35A16-9C54-4D9B-8C8F-1A72AF0C9411}.Debug|x86.Build.0 = Debug|Win32
+		{E1D35A16-9C54-4D9B-8C8F-1A72AF0C9411}.Release|x64.ActiveCfg = Release|x64
+		{E1D35A16-9C54-4D9B-8C8F-1A72AF0C9411}.Release|x64.Build.0 = Release|x64
+		{E1D35A16-9C54-4D9B-8C8F-1A72AF0C9411}.Release|x86.ActiveCfg = Release|Win32
+		{E1D35A16-9C54-4D9B-8C8F-1A72AF0C9411}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

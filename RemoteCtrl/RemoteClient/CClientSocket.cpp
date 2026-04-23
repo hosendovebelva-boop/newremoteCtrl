@@ -1,344 +1,178 @@
-#include "pch.h"
+﻿#include "pch.h"
 #include "CClientSocket.h"
 
-CClientSocket* CClientSocket::m_instance = NULL;
-CClientSocket::CHelper CClientSocket::m_helper;
+#include <atlconv.h>
+#include <process.h>
 
-CClientSocket* pclient = CClientSocket::getInstance();
+#pragma comment(lib, "Ws2_32.lib")
 
-// Why not implement this in the header file?
-std::string GetErrInfo(int wsaErrCode)
+CClientSocket::CClientSocket()
+    : m_socket(INVALID_SOCKET),
+      m_thread(nullptr),
+      m_threadId(0),
+      m_ownerWnd(nullptr),
+      m_running(false),
+      m_suppressCloseNotification(false)
 {
-	std::string ret;
-	LPVOID lpMsgBuf = NULL;
-	FormatMessage(
-		FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER,
-		NULL,
-		wsaErrCode,
-		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-		(LPTSTR)&lpMsgBuf, 0, NULL
-	);
-	ret = (char*)lpMsgBuf;
-	LocalFree(lpMsgBuf);
-	return ret;
 }
 
-CClientSocket::CClientSocket(const CClientSocket& ss)
+CClientSocket::~CClientSocket()
 {
-	m_hThread = INVALID_HANDLE_VALUE;
-	m_bAutoClose = ss.m_bAutoClose;
-	m_sock = ss.m_sock;
-	m_nIP = ss.m_nIP;
-	m_nPort = ss.m_nPort;
-	std::map<UINT, CClientSocket::MSGFUNC>::const_iterator it = ss.m_mapFunc.begin();
-	for (;it != ss.m_mapFunc.end();it++)
-	{
-		m_mapFunc.insert(std::pair<UINT, MSGFUNC>(it->first, it->second));
-	}
-
+    Close();
 }
 
-CClientSocket::CClientSocket() :
-	m_nIP(INADDR_ANY),
-	m_nPort(0),
-	m_sock(INVALID_SOCKET),
-	m_bAutoClose(true),
-	m_hThread(INVALID_HANDLE_VALUE)
+bool CClientSocket::Connect(const CString& hostIp, UINT port, HWND ownerWnd)
 {
-	if (InitSockEnv() == FALSE)
-	{
-		MessageBox(NULL, _T("Unable to initialize the socket environment. Please check the network settings!"), _T("Initialization Error!"), MB_OK | MB_ICONERROR);
-		exit(0);
-	}
-	m_eventInvoke = CreateEvent(NULL, TRUE, FALSE, NULL);
-	m_hThread = (HANDLE)_beginthreadex(NULL, 0, &CClientSocket::threadEntry, this, 0, &m_nThreadID);
-	if (WaitForSingleObject(m_eventInvoke, 100) == WAIT_TIMEOUT)
-	{
-		TRACE("Failed to start the network message handling thread!\r\n");
-	}
-	CloseHandle(m_eventInvoke);
-	m_buffer.resize(BUFFER_SIZE);
-	// Correct location
-	memset(m_buffer.data(), 0, BUFFER_SIZE);
+    Close();
 
-	struct
-	{
-		UINT message;
-		MSGFUNC func;
-	}funcs[] = {
-		{WM_SEND_PACK,&CClientSocket::SendPack},
-		{0,NULL}
-	};
-	for (int i = 0;funcs[i].message != 0;i++)
-	{
-		if (m_mapFunc.insert(std::pair<UINT, MSGFUNC>(funcs[i].message, funcs[i].func)).second == false)
-		{
-			TRACE("Insert failed, message value: %d function value: %08X", funcs[i].message, funcs[i].func, i);
-		}
-	}
+    m_ownerWnd = ownerWnd;
+    m_suppressCloseNotification = false;
+    m_receiveBuffer.clear();
+
+    m_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    if (m_socket == INVALID_SOCKET)
+    {
+        return false;
+    }
+
+    sockaddr_in serverAddress = {};
+    serverAddress.sin_family = AF_INET;
+    serverAddress.sin_port = htons(static_cast<u_short>(port));
+
+    CT2A hostIpA(hostIp);
+    if (InetPtonA(AF_INET, hostIpA, &serverAddress.sin_addr) != 1)
+    {
+        CloseSocket();
+        return false;
+    }
+
+    if (connect(m_socket, reinterpret_cast<sockaddr*>(&serverAddress), sizeof(serverAddress)) == SOCKET_ERROR)
+    {
+        CloseSocket();
+        return false;
+    }
+
+    m_running = true;
+    m_thread = reinterpret_cast<HANDLE>(_beginthreadex(nullptr, 0, &CClientSocket::ThreadEntry, this, 0, &m_threadId));
+    if (m_thread == nullptr)
+    {
+        CloseSocket();
+        m_running = false;
+        return false;
+    }
+
+    return true;
 }
 
-void Dump(BYTE* pData, size_t nSize)
+void CClientSocket::Close()
 {
-	std::string strOut;
-	for (size_t i = 0;i < nSize;i++)
-	{
-		char buf[8] = "";
-		if (i > 0 && (i % 16 == 0))
-			strOut += '/n';
-		snprintf(buf, sizeof(buf), "%02X", pData[i] & 0xFF);
-		strOut += buf;
-	}
-	strOut += '\n';
-	OutputDebugStringA(strOut.c_str());
+    m_running = false;
+    m_suppressCloseNotification = true;
+    CloseSocket();
+
+    if (m_thread != nullptr)
+    {
+        if (GetCurrentThreadId() != m_threadId)
+        {
+            WaitForSingleObject(m_thread, 2000);
+        }
+
+        CloseHandle(m_thread);
+        m_thread = nullptr;
+        m_threadId = 0;
+    }
 }
 
-bool CClientSocket::InitSocket()
+bool CClientSocket::SendPacket(const CPacket& packet)
 {
-	if (m_sock != INVALID_SOCKET)
-		CloseSocket();
-	m_sock = socket(PF_INET, SOCK_STREAM, 0);
-	//TODO: checksum
-	if (m_sock == -1)
-		return false;
-	sockaddr_in serv_adr;
-	memset(&serv_adr, 0, sizeof(serv_adr));
-	serv_adr.sin_family = AF_INET;
-	// Endian conversion error
-	TRACE("addr %08X nIP %08X\r\n", inet_addr("127.0.0.1"), m_nIP);
-	serv_adr.sin_addr.s_addr = inet_addr("127.0.0.1");
-	//serv_adr.sin_addr.s_addr = nIP;
-	serv_adr.sin_addr.s_addr = htonl(m_nIP);
-	serv_adr.sin_port = htons(m_nPort);
-	if (serv_adr.sin_addr.s_addr == INADDR_NONE)
-	{
-		AfxMessageBox("The specified IP address does not exist!!");
-		return false;
-	}
-	int ret = connect(m_sock, (sockaddr*)&serv_adr, sizeof(serv_adr));
-	if (ret == -1)
-	{
-		AfxMessageBox("Connection failed");
-		TRACE("Connection failed, %d %s\r\n", WSAGetLastError(), GetErrInfo(WSAGetLastError()).c_str());
-		return false;
-	}
-	TRACE("socket init done!\r\n");
-	return true;
+    if (m_socket == INVALID_SOCKET)
+    {
+        return false;
+    }
+
+    const std::vector<char> bytes = packet.Serialize();
+    std::lock_guard<std::mutex> guard(m_sendMutex);
+    size_t sentLength = 0;
+    while (sentLength < bytes.size())
+    {
+        const int chunkLength = send(m_socket, bytes.data() + sentLength, static_cast<int>(bytes.size() - sentLength), 0);
+        if (chunkLength <= 0)
+        {
+            return false;
+        }
+
+        sentLength += static_cast<size_t>(chunkLength);
+    }
+
+    return true;
 }
 
-bool CClientSocket::SendPacket(HWND hWnd, const CPacket& pack, bool isAutoClosed, WPARAM wParam)
+bool CClientSocket::IsConnected() const
 {
-	UINT nMode = isAutoClosed ? CSM_AUTOCLOSE : 0;
-	std::string strOut;
-	pack.Data(strOut);
-	PACKET_DATA* pData = new PACKET_DATA(strOut.c_str(), strOut.size(), nMode, wParam);
-	bool ret = PostThreadMessage(m_nThreadID, WM_SEND_PACK, (WPARAM)pData, (LPARAM)hWnd);
-	if (ret == false)
-	{
-		delete pData;
-	}
-	return ret;
+    return m_socket != INVALID_SOCKET;
 }
 
-/*
-bool CClientSocket::SendPacket(const CPacket& pack, std::list<CPacket>& lstPacks, bool isAutoClosed)
+unsigned __stdcall CClientSocket::ThreadEntry(void* context)
 {
-	// Check validity only when sending packets
-	if (m_sock == INVALID_SOCKET && m_hThread == INVALID_HANDLE_VALUE)
-	{
-		m_hThread = (HANDLE)_beginthread(&CClientSocket::threadEntry, 0, this);
-		TRACE("start thread\r\n");
-	}
-	m_lock.lock();
-	auto pr = m_mapAck.insert(std::pair<HANDLE,
-		std::list<CPacket>&>(pack.hEvent, lstPacks));
-	m_mapAutoClosed.insert(std::pair<HANDLE, bool>(pack.hEvent, isAutoClosed));
-	m_lstSend.push_back(pack);
-	m_lock.unlock();
-	TRACE("cmd:%d event %08X thread id %d\r\n", pack.sCmd, pack.hEvent, GetCurrentThreadId());
-	WaitForSingleObject(pack.hEvent, INFINITE);
-	TRACE("cmd:%d event %08X thread id %d\r\n", pack.sCmd, pack.hEvent, GetCurrentThreadId());
-	std::map<HANDLE, std::list<CPacket>&>::iterator it;
-	it = m_mapAck.find(pack.hEvent);
-	if (it != m_mapAck.end())
-	{
-		m_lock.lock();
-		m_mapAck.erase(it);
-		m_lock.unlock();
-		return true;
-	}
-	return false;
-}
-*/
-
-unsigned CClientSocket::threadEntry(void* arg)
-{
-	CClientSocket* thiz = (CClientSocket*)arg;
-	thiz->threadFunc2();
-	_endthreadex(0);
-	return 0;
+    return static_cast<CClientSocket*>(context)->Run();
 }
 
-//void CClientSocket::threadFunc()
-//{
-//	std::string strBuffer;
-//	strBuffer.resize(BUFFER_SIZE);
-//	char* pBuffer = (char*)strBuffer.c_str();
-//	int index = 0;
-//	InitSocket();
-//	while (m_sock != INVALID_SOCKET)
-//	{
-//		if (m_lstSend.size() > 0)
-//		{
-//			TRACE("lstSend size: %d\r\n", m_lstSend.size());
-//			m_lock.lock();
-//			CPacket& head = m_lstSend.front();
-//			m_lock.unlock();
-//			if (Send(head) == false)
-//			{
-//				TRACE("send failed!\r\n");
-//				continue;
-//			}
-//			std::map<HANDLE, std::list<CPacket>&>::iterator it;
-//			it = m_mapAck.find(head.hEvent);
-//			if (it != m_mapAck.end())
-//			{
-//				std::map<HANDLE, bool>::iterator it0 = m_mapAutoClosed.find(head.hEvent);
-//				do {
-//					int length = recv(m_sock, pBuffer + index, BUFFER_SIZE - index, 0);
-//					TRACE("recv %d %d \r\n", length, index);
-//					if ((length > 0) || (index > 0))
-//					{
-//						index += length;
-//						size_t size = (size_t)index;
-//						CPacket pack((BYTE*)pBuffer, size);
-//						if (size > 0)
-//						{
-//							pack.hEvent = head.hEvent;
-//							it->second.push_back(pack);
-//							memmove(pBuffer, pBuffer + size, index - size);
-//							index -= size;
-//							TRACE("SetEvent %d %d\r\n", pack.sCmd, it0->second);
-//							if (it0->second)
-//							{
-//								SetEvent(head.hEvent);
-//								break;
-//							}
-//						}
-//					}
-//					else if (length <= 0 && index <= 0)
-//					{
-//						CloseSocket();
-//						SetEvent(head.hEvent);	// Signal the event after the server closes the command
-//						if (it0 != m_mapAutoClosed.end())
-//						{
-//							TRACE("SetEvent %d %d\r\n", head.sCmd, it0->second);
-//						}
-//						else
-//						{
-//							TRACE("Unexpected case: no matching pair \r\n");
-//						}
-//						break;
-//					}
-//				} while (it0->second == false);
-//			}
-//			m_lock.lock();
-//			m_lstSend.pop_front();
-//			m_mapAutoClosed.erase(head.hEvent);
-//			m_lock.unlock();
-//			if (InitSocket() == false)
-//			{
-//				InitSocket();
-//			}
-//		}
-//		Sleep(1);
-//	}
-//	CloseSocket();
-//}
-
-void CClientSocket::threadFunc2()
+unsigned CClientSocket::Run()
 {
-	SetEvent(m_eventInvoke);
-	MSG msg;
-	while (::GetMessage(&msg, NULL, 0, 0))
-	{
-		TranslateMessage(&msg);
-		DispatchMessage(&msg);
-		TRACE("Get Message:%08X \r\n", msg.message);
-		if (m_mapFunc.find(msg.message) != m_mapFunc.end())
-		{
-			(this->*m_mapFunc[msg.message])(msg.message, msg.wParam, msg.lParam);
-		}
-	}
+    ViewerCloseReason closeReason = ViewerCloseReason::RemoteClosed;
+    while (m_running)
+    {
+        char buffer[8192] = {};
+        const int receivedLength = recv(m_socket, buffer, sizeof(buffer), 0);
+        if (receivedLength <= 0)
+        {
+            break;
+        }
+
+        m_receiveBuffer.insert(m_receiveBuffer.end(), buffer, buffer + receivedLength);
+        while (!m_receiveBuffer.empty())
+        {
+            CPacket packet;
+            size_t consumed = 0;
+            const PacketParseResult result = CPacket::TryParse(m_receiveBuffer.data(), m_receiveBuffer.size(), packet, consumed);
+            if (result == PacketParseResult::NeedMoreData)
+            {
+                break;
+            }
+
+            if (result == PacketParseResult::Invalid)
+            {
+                closeReason = ViewerCloseReason::ParseError;
+                m_running = false;
+                break;
+            }
+
+            m_receiveBuffer.erase(m_receiveBuffer.begin(), m_receiveBuffer.begin() + static_cast<std::ptrdiff_t>(consumed));
+            if (::IsWindow(m_ownerWnd))
+            {
+                ::PostMessage(m_ownerWnd, WM_VIEWER_PACKET, 0, reinterpret_cast<LPARAM>(new CPacket(packet)));
+            }
+        }
+    }
+
+    const bool notifyClose = !m_suppressCloseNotification;
+    m_running = false;
+    CloseSocket();
+
+    if (notifyClose && ::IsWindow(m_ownerWnd))
+    {
+        ::PostMessage(m_ownerWnd, WM_VIEWER_SOCKET_CLOSED, static_cast<WPARAM>(closeReason), 0);
+    }
+
+    return 0;
 }
 
-bool CClientSocket::Send(const CPacket& pack)
+void CClientSocket::CloseSocket()
 {
-	TRACE("m_sock = %d\r\n", m_sock);
-	if (m_sock == -1)
-		return false;
-	std::string strOut;
-	pack.Data(strOut);
-	return send(m_sock, strOut.c_str(), strOut.size(), 0) > 0;
-}
-
-void CClientSocket::SendPack(UINT nMsg, WPARAM wParam, LPARAM lParam)
-{
-	PACKET_DATA data = *(PACKET_DATA*)wParam;
-	delete (PACKET_DATA*)wParam;
-	HWND hWnd = (HWND)lParam;
-	size_t nTemp = data.strData.size();
-	CPacket current((BYTE*)data.strData.c_str(), nTemp);
-	//Define the message data structure (data, data length, mode) and the callback message structure (HWND)
-	if (InitSocket() == true)
-	{
-		int ret = send(m_sock, (char*)data.strData.c_str(), (int)data.strData.size(), 0);
-		if (ret > 0)
-		{
-			size_t index = 0;
-			std::string strBuffer;
-			strBuffer.resize(BUFFER_SIZE);
-			char* pBuffer = (char*)strBuffer.c_str();
-			while (m_sock != INVALID_SOCKET)
-			{
-				int length = recv(m_sock, pBuffer + index, BUFFER_SIZE - index, 0);
-				if (length > 0 || (index > 0))
-				{
-					index += (size_t)length;
-					size_t nLen = index;
-					CPacket pack((BYTE*)pBuffer, nLen);
-					if (nLen > 0)
-					{
-						TRACE("ack pack %d to hWnd %08X\r\n", pack.sCmd, hWnd);
-						::SendMessage(hWnd, WM_SEND_PACK_ACK, (WPARAM)new CPacket(pack), data.wParam);
-						if (data.nMode & CSM_AUTOCLOSE)
-						{
-							CloseSocket();
-							return;
-						}
-						index -= nLen;
-						memmove(pBuffer, pBuffer + nLen, index);
-					}
-				}
-				else
-				{
-					//TODO: peer closed the socket / network device exception
-					TRACE("recv failed length %d index %d cmd %d\r\n", length, index, current.sCmd);
-					CloseSocket();
-					::SendMessage(hWnd, WM_SEND_PACK_ACK, (WPARAM)new CPacket(current.sCmd,NULL,0), 1);
-				}
-			}
-		}
-		else
-		{
-			CloseSocket();
-			//Handle network shutdown
-			::SendMessage(hWnd, WM_SEND_PACK_ACK, NULL, -1);
-		}
-	}
-	else
-	{
-		::SendMessage(hWnd, WM_SEND_PACK_ACK, NULL, -2);
-	}
-
+    if (m_socket != INVALID_SOCKET)
+    {
+        shutdown(m_socket, SD_BOTH);
+        closesocket(m_socket);
+        m_socket = INVALID_SOCKET;
+    }
 }

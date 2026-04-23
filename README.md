@@ -1,93 +1,66 @@
-# Remote_CTL
+# ScreenShareHost / ScreenShareViewer
 
+A consent-based LAN screen sharing sample built with MFC and Winsock.
 
+## What this repo contains
 
-## Getting started
+This repository now ships two Windows applications inside `RemoteCtrl/RemoteCtrl.sln`:
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+- `ScreenShareHost`: a visible host app that shows local IPs, generates a 6-digit session code, asks for consent, and displays a top banner while sharing is active.
+- `ScreenShareViewer`: a visible viewer app that connects to the host, submits the session code, waits for host approval, and displays read-only screen updates.
+- `PacketTests`: a small console test project that exercises the shared packet parser.
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+## Safety boundaries
 
-## Add your files
+This codebase is intentionally scoped to a narrow, visible screen-sharing workflow.
 
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
+- No persistence
+- No elevation
+- No remote command execution
+- No file browsing, upload, download, or deletion
+- No mouse or keyboard injection
+- No lock-screen behavior
+- One viewer at a time
 
-```
-cd existing_repo
-git remote add origin https://git.edoyun.com/AAPVBQPVDRX0BA9H/remote_ctl.git
-git branch -M main
-git push -uf origin main
-```
+## Session flow
 
-## Integrate with your tools
+1. Launch `ScreenShareHost` manually.
+2. Read the 6-digit session code from the host window.
+3. Enter the host IP, port, and session code into `ScreenShareViewer`.
+4. The host receives the request and shows an allow/deny dialog.
+5. If allowed, the viewer requests a frame every 500 ms.
+6. Either side can end the session explicitly.
 
-- [ ] [Set up project integrations](https://git.edoyun.com/AAPVBQPVDRX0BA9H/remote_ctl/-/settings/integrations)
+## Project layout
 
-## Collaborate with your team
+- `RemoteCtrl/RemoteCtrl/`: host app, consent dialog, banner window, server loop, screen capture
+- `RemoteCtrl/RemoteClient/`: viewer app, persistent client socket, watch dialog
+- `RemoteCtrl/ScreenShareProtocol.h`: shared protocol constants and command/status values
+- `RemoteCtrl/SharedPacket.h`: shared packet serialization and parsing
+- `RemoteCtrl/PacketTests/`: parser regression tests
+- `RemoteCtrl/THREAT_MODEL.md`: current risks and assumptions
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
+## Build
 
-## Test and Deploy
+Open `RemoteCtrl/RemoteCtrl.sln` in Visual Studio 2022 and build:
 
-Use the built-in continuous integration in GitLab.
+- `ScreenShareHost`
+- `ScreenShareViewer`
+- `PacketTests`
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+Recommended configurations:
 
-***
+- `Debug|x64`
+- `Release|x64`
 
-# Editing this README
+## Current limitations
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+- LAN only
+- Plaintext transport
+- No TLS or identity binding beyond the session code
+- No multi-viewer support
+- No reconnect or resume
 
-## Suggestions for a good README
+## Legacy material
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
-
-## Name
-Choose a self-explaining name for your project.
-
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
-
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
-
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
-
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
-
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
-
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
-
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
-
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
-
-## License
-For open source projects, say how it is licensed.
-
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+`RemoteCtrl/RemoteControlSystemDesign.mdj` is retained only as legacy reference material from the earlier remote-control study code. It is not part of the active product path.

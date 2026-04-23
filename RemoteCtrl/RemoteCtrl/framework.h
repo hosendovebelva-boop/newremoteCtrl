@@ -1,6 +1,9 @@
 ﻿#pragma once
 
 #include "targetver.h"
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#include <shellapi.h>
 #include <stdio.h>
 #include <tchar.h>
 #define _ATL_CSTRING_EXPLICIT_CONSTRUCTORS      // Some CString constructors will be explicit

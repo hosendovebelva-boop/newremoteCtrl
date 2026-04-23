@@ -1,226 +1,93 @@
-﻿# RemoteCtrl Project Guide
-
-> This document gives an English overview of the RemoteCtrl codebase, including architecture, protocol design, command flow, thread model, and current limitations.
+# ScreenShare Project Guide
 
 ## Overview
 
-RemoteCtrl is a Windows remote control system built with a classic client-server architecture.
+This codebase is a visible, consent-gated LAN screen sharing sample.
 
-- `RemoteCtrl` is the controlled side. It runs on the target machine, listens on TCP port `9527`, receives commands, and performs actions locally.
-- `RemoteClient` is the controller side. It provides an MFC UI for file browsing, screen monitoring, mouse control, file download, and machine lock/unlock.
+- `ScreenShareHost` runs on the machine being viewed.
+- `ScreenShareViewer` runs on the machine requesting access.
+- The viewer submits a 6-digit session code.
+- The host user must allow the request before frames are sent.
+- Frames are requested on a fixed 500 ms cadence.
 
-Technology stack:
+The active implementation supports a single viewer and read-only screenshots only.
 
-- Language: C++
-- UI: MFC dialog-based applications
-- Networking: Winsock 1.1 over TCP
-- Imaging: `CImage`, GDI, screen capture and PNG encoding
-- Toolchain: Visual Studio 2022, x64 target
+## Shared protocol
 
-## Repository Layout
+Shared headers live at the solution root:
 
-```text
-RemoteCtrl/
-|-- RemoteCtrl.sln
-|-- CLAUDE.md
-|-- ProjectGuide.md
-|-- RemoteControlSystemDesign.mdj
-|-- RemoteCtrl/
-|   |-- RemoteCtrl.cpp
-|   |-- RemoteCtrl.h
-|   |-- RemoteCtrl.rc
-|   |-- ServerSocket.h / ServerSocket.cpp
-|   |-- Packet.h
-|   |-- Command.h / Command.cpp
-|   |-- LockInfoDialog.h / LockInfoDialog.cpp
-|   |-- EdoyunTool.h / EdoyunTool.cpp
-|   |-- framework.h
-|   |-- pch.h / pch.cpp
-|   |-- resource.h
-|   `-- targetver.h
-`-- RemoteClient/
-    |-- RemoteClient.cpp / RemoteClient.h
-    |-- RemoteClientDlg.cpp / RemoteClientDlg.h
-    |-- CClientSocket.cpp / CClientSocket.h
-    |-- ClientController.cpp / ClientController.h
-    |-- CWatchDialog.cpp / CWatchDialog.h
-    |-- StatusDlg.cpp / StatusDlg.h
-    |-- EdoyunTool.h
-    |-- RemoteClient.rc
-    |-- framework.h
-    |-- pch.h / pch.cpp
-    |-- resource.h
-    `-- targetver.h
-```
+- `RemoteCtrl/ScreenShareProtocol.h`
+- `RemoteCtrl/SharedPacket.h`
 
-## Architecture
+Command IDs:
 
-### Shared Protocol Layer
+| Command | Direction | Meaning |
+|---|---|---|
+| `1001 SubmitSessionCode` | Viewer -> Host | Submit exactly 6 ASCII digits |
+| `1002 SessionStatus` | Host -> Viewer | Return auth/session state |
+| `6 SendScreen` | Viewer -> Host, Host -> Viewer | Empty request, PNG response |
+| `1003 EndSession` | Either direction | End the current session |
 
-The protocol is duplicated on both sides:
+Session status payload values:
 
-- Server: `RemoteCtrl/Packet.h`
-- Client: `RemoteClient/CClientSocket.h`
+| Value | Meaning |
+|---|---|
+| `0` | Bad code |
+| `1` | Code accepted, waiting for host consent |
+| `2` | Host denied the request |
+| `3` | Host granted the request |
+| `4` | Host already has an active viewer |
+| `5` | Session ended |
 
-Both sides must stay in sync for packet layout and command semantics.
+## Host architecture
 
-### Server Side
+Files:
 
-Main responsibilities:
+- `RemoteCtrl/RemoteCtrl/RemoteCtrl.cpp`
+- `RemoteCtrl/RemoteCtrl/HostMainDlg.*`
+- `RemoteCtrl/RemoteCtrl/ServerSocket.*`
+- `RemoteCtrl/RemoteCtrl/ConsentDialog.*`
+- `RemoteCtrl/RemoteCtrl/ShareBannerWnd.*`
+- `RemoteCtrl/RemoteCtrl/ScreenCapture.*`
 
-- Accept incoming TCP connections.
-- Parse packets from the client.
-- Dispatch commands through `CCommand`.
-- Perform local file, screen, mouse, and lock operations.
+Behavior:
 
-Core classes:
+- Starts Winsock at app scope
+- Binds `INADDR_ANY:9527`
+- Shows local IPv4 addresses and the current 6-digit session code
+- Posts consent requests back to the UI thread
+- Shows a topmost banner while a session is active
+- Exposes tray actions for show, stop, and exit
 
-- `CServerSocket`: singleton TCP server and receive/send path.
-- `CPacket`: packet parser/serializer.
-- `CCommand`: command dispatcher and implementation.
-- `CLockInfoDialog`: full-screen lock overlay.
+## Viewer architecture
 
-### Client Side
+Files:
 
-Main responsibilities:
+- `RemoteCtrl/RemoteClient/RemoteClient.cpp`
+- `RemoteCtrl/RemoteClient/RemoteClientDlg.*`
+- `RemoteCtrl/RemoteClient/CClientSocket.*`
+- `RemoteCtrl/RemoteClient/CWatchDialog.*`
 
-- Present the controller UI.
-- Send commands to the server.
-- Display file lists, progress, and screen data.
-- Convert local UI input into remote actions.
+Behavior:
 
-Core classes:
+- Connects to the host once per session
+- Sends the session code immediately after connect
+- Waits for `SessionStatus`
+- Opens a modeless watch window after consent is granted
+- Requests the next frame every 500 ms
+- Sends `EndSession` when the watch window is closed locally
 
-- `CClientSocket`: singleton TCP client.
-- `CClientController`: high-level command coordinator.
-- `CRemoteClientDlg`: main file browsing and control UI.
-- `CWatchDialog`: remote desktop display and mouse input.
-- `CStatusDlg`: progress/status feedback.
+## Packet tests
 
-## Protocol Summary
+`RemoteCtrl/PacketTests/PacketTests.cpp` covers:
 
-The application uses a custom little-endian binary packet format.
+- Complete packet parse
+- Fragmented header
+- Fragmented payload
+- Two packets in one buffer
+- Bad checksum
+- Empty payload
 
-| Field | Size | Description |
-|---|---:|---|
-| Header | 2 bytes | Magic marker `0xFEFF` |
-| Length | 4 bytes | Length from command field through checksum |
-| Command | 2 bytes | Command ID |
-| Data | N bytes | Variable-length payload |
-| Checksum | 2 bytes | WORD sum/check value |
+## Legacy note
 
-### Core Structures
-
-`CPacket`
-
-- Serializes requests and responses.
-- Parses partial network buffers.
-- Uses a consumed-length out parameter when parsing receive data.
-
-`MOUSEEV`
-
-- `nAction`: click, double-click, down, up, move
-- `nButton`: left, right, middle, none
-- `ptXY`: target coordinates
-
-`FILEINFO`
-
-- Signals whether the entry is valid, whether it is a directory, whether more entries follow, and the file name.
-
-## Command Map
-
-| Command | Meaning | Server handler |
-|---:|---|---|
-| 1 | Query drive list | `MakeDriverInfo()` |
-| 2 | Query directory contents | `MakeDirectoryInfo()` |
-| 3 | Run file | `RunFile()` |
-| 4 | Download file | `DownloadFile()` |
-| 5 | Mouse event | `MouseEvent()` |
-| 6 | Capture and send screen | `SendScreen()` |
-| 7 | Lock machine | `LockMachine()` |
-| 8 | Unlock machine | `UnlockMachine()` |
-| 9 | Delete file | `DeleteLocalFile()` |
-| 1981 | Connection test | `TestConnect()` |
-
-## Main Flows
-
-### File Browsing
-
-1. Client sends Command 1 to get available drives.
-2. Server returns a comma-separated drive list.
-3. Client populates the tree view.
-4. When the user expands or clicks a node, the client sends Command 2 with the selected path.
-5. Server enumerates the directory and returns multiple `FILEINFO` records.
-6. Client updates the tree and file list controls.
-
-### File Download
-
-1. Client sends Command 4 with the remote file path.
-2. Server replies with the file size first.
-3. Server streams file chunks in subsequent packets.
-4. Client writes chunks to a local file and updates state until complete.
-
-### Remote Desktop Monitoring
-
-1. Watch thread repeatedly requests Command 6.
-2. Server captures the screen using GDI and encodes it through `CImage`.
-3. Client receives image bytes, decodes them, and paints them in `CWatchDialog`.
-4. Mouse input is converted from local control coordinates to remote screen coordinates.
-
-### Machine Lock / Unlock
-
-1. Client sends Command 7 to lock the machine.
-2. Server launches `CLockInfoDialog`, hides the taskbar, and restricts cursor movement.
-3. Client sends Command 8 to unlock.
-4. Server releases the lock dialog and restores cursor/taskbar state.
-
-## Thread Model
-
-### Server
-
-- Main thread: accepts connections and handles commands.
-- Lock dialog thread: owns the lock UI while the machine is locked.
-
-### Client
-
-- UI thread: owns dialogs and control updates.
-- Watch thread: polls screenshots.
-- Download workflow: receives and writes streamed file data.
-
-Important synchronization patterns:
-
-- The client uses flags such as `m_isFull` and `m_isClosed` to coordinate watch dialog state.
-- Some command dispatch paths bounce work back to the UI thread using Windows messages to avoid unsafe cross-thread UI access.
-
-## Important Fixes Already Applied
-
-Examples of fixes present in the codebase:
-
-- 64-bit handle safety for `_findfirst` usage.
-- Correct file download loop termination.
-- Correct item selection after `HitTest` in the tree control.
-- Better coordinate conversion for remote mouse events.
-- Empty `OnOK()` override in the watch dialog to avoid accidental close on Enter.
-- Better handling of receive return types and buffer consumption.
-
-## Known Limitations
-
-- Protocol definitions are duplicated on client and server.
-- Most operations use short-lived socket workflows rather than a long-lived command channel.
-- No encryption or authentication is implemented.
-- The server currently handles a single controller at a time.
-- Several project files were originally generated by Visual Studio and still reflect that structure.
-
-## Practical Notes
-
-- Build the solution with Visual Studio 2022.
-- Debug and release outputs are generated under `x64/` and should not be committed.
-- Resource and project files may use mixed encodings; preserving their original encoding matters when editing them.
-
-## Suggested Next Improvements
-
-- Extract shared protocol definitions into one common header/library.
-- Add authentication and transport encryption.
-- Move from polling-based screen requests to a more efficient streaming model.
-- Remove generated build outputs from version control permanently.
-- Add automated tests around packet parsing and command behavior where possible.
+`RemoteCtrl/RemoteControlSystemDesign.mdj` and older notes refer to the previous remote-control study code. They are not the source of truth for the active implementation anymore.

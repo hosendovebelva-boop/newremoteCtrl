@@ -1,224 +1,103 @@
 #pragma once
-// ServerSocket.cpp
-#include "pch.h"
-#include "framework.h"
-#include <list>
-#include "Packet.h"
 
+#include "..\\ScreenShareProtocol.h"
+#include "..\\SharedPacket.h"
 
-typedef void (*SOCKET_CALLBACK)(void* , int , std::list<CPacket>& ,CPacket&);
+#include <afxdialogex.h>
+
+#include <atomic>
+#include <mutex>
+#include <vector>
+
+constexpr UINT WM_HOST_SERVER_EVENT = WM_APP + 0x100;
+constexpr UINT WM_HOST_CONSENT_REQUEST = WM_APP + 0x101;
+constexpr UINT WM_HOST_BANNER_END_SESSION = WM_APP + 0x102;
+constexpr UINT WM_HOST_TRAYICON = WM_APP + 0x103;
+
+enum class HostServerEventType
+{
+    Listening,
+    WaitingForConsent,
+    SharingStarted,
+    SessionEnded,
+    Error,
+};
+
+struct HostServerEventPayload
+{
+    HostServerEventType type;
+    CString peerIp;
+    CString detail;
+};
+
+struct ConsentRequest
+{
+    explicit ConsentRequest(const CString& viewerIp)
+        : peerIp(viewerIp), completedEvent(::CreateEvent(nullptr, TRUE, FALSE, nullptr)), allowed(false)
+    {
+    }
+
+    ~ConsentRequest()
+    {
+        if (completedEvent != nullptr)
+        {
+            ::CloseHandle(completedEvent);
+            completedEvent = nullptr;
+        }
+    }
+
+    CString peerIp;
+    HANDLE completedEvent;
+    bool allowed;
+};
 
 class CServerSocket
 {
 public:
-	static CServerSocket* getInstance() {
-		if (m_instance == NULL)
-		{
-			// Manual allocation and manual release: an object created with new is not limited by scope lifetime.
-			// Unless you explicitly call delete m_instance; in the code, its destructor will never be executed.
-			m_instance = new CServerSocket();
-		}
-		return m_instance;
-	}
-	
+    CServerSocket();
+    ~CServerSocket();
 
-	int Run(SOCKET_CALLBACK callback, void* arg, short port = 9527)
-	{
-		// 1. Controllable progress 2. Easier integration 3. Feasibility evaluation to expose risks early
-		// TODO: socket, bind, listen, accept, read, write, close
-		// Initialize the socket address structure
-		bool ret = InitSocket(port);
-		if (ret == false)return -1;
-		std::list<CPacket> lstPackets;
-		m_callback = callback;
-		m_arg = arg;
-		int count = 0;
-		while (true)
-		{
-			if (AcceptClient() == false)
-			{
-				if (count >= 3)
-				{
-					return -2;
-				}
-				count++;
-			}
-			int ret = DealCommand();
-			if (ret > 0)
-			{
-				m_callback(m_arg, ret, lstPackets, m_packet);
-				while (lstPackets.size() > 0)
-				{
-					Send(lstPackets.front());
-					lstPackets.pop_front();
-				}
-			}
-			CloseClient();
-		}
-		return 0;
-	}
-protected:
-	bool InitSocket(short port)
-	{
-		if (m_sock == -1)
-			return false;
-		sockaddr_in serv_adr;
-		memset(&serv_adr, 0, sizeof(serv_adr));
-		serv_adr.sin_family = AF_INET;
-		serv_adr.sin_addr.s_addr = INADDR_ANY;
-		serv_adr.sin_port = htons(port);
-		// bind
-		if (bind(m_sock, reinterpret_cast<sockaddr*>(&serv_adr), sizeof(serv_adr)) == -1)
-			return false;
+    bool Start(HWND owner, const CString& sessionCode, UINT port = ScreenShareProtocol::kDefaultPort);
+    void Stop();
+    void EndSession();
+    void SetSessionCode(const CString& sessionCode);
+    CString GetPeerIp() const;
+    bool IsSharing() const;
 
-		if (listen(m_sock, 1) == -1)
-			return false;
-
-		return true;
-	}
-
-	bool AcceptClient()
-	{
-		TRACE("enter AcceptClient\r\n");
-		sockaddr_in client_adr;
-		int cli_sz = sizeof(client_adr);
-		m_client = accept(m_sock, (sockaddr*)&client_adr, &cli_sz);
-		TRACE("m_client=%d\r\n", m_client);
-		if (m_client == -1)
-			return false;
-		return true;
-	}
-
-#define BUFFER_SIZE 4096000
-	int DealCommand()
-	{
-		if (m_client == -1)
-			return -1;
-		//char buffer[1024] = "";
-		char* buffer = new char[BUFFER_SIZE];
-		if (buffer == NULL)
-		{
-			TRACE("Out of memory!\r\n");
-			return -2;
-		}
-		memset(buffer, 0, BUFFER_SIZE);
-		size_t index = 0;
-		while (true)
-		{
-			size_t len = recv(m_client, buffer + index, BUFFER_SIZE - index, 0);
-			if (len <= 0)
-			{
-				delete[]buffer;
-				return -1;
-			}
-			TRACE("recv %d\r\n", len);
-			// TODO: handle commands
-			index += len;
-			len = index;
-			m_packet = CPacket((BYTE*)buffer, len);
-			if (len > 0)
-			{
-				memmove(buffer, buffer + len, BUFFER_SIZE - len);
-				index -= len;
-				delete[]buffer;
-				return m_packet.sCmd;
-			}
-		}
-		delete[]buffer;
-		return -1;
-	}
-
-	// Why the Send function should not be removed even though nothing else references it yet
-	bool Send(const char* pData, size_t nSize)
-	{
-		if (m_client == -1)
-			return false;
-		return send(m_client, pData, nSize, 0) > 0;
-	}
-	bool Send(CPacket& pack)
-	{
-		if (m_client == -1)
-			return false;
-		//Dump((BYTE*)pack.Data(), pack.Size());
-		return send(m_client, pack.Data(), pack.Size(), 0) > 0;
-
-	}
-
-	void CloseClient()
-	{
-		if (m_client != INVALID_SOCKET)
-		{
-			closesocket(m_client);
-			m_client = INVALID_SOCKET;
-		}
-	}
 private:
-	SOCKET_CALLBACK m_callback;
-	void* m_arg;
-	SOCKET m_client;
-	SOCKET m_sock;
-	CPacket m_packet;
-	// Private use only
-	CServerSocket& operator=(const CServerSocket& ss) {}
-	CServerSocket(const CServerSocket& ss)
-	{
-		m_sock = ss.m_sock;
-		m_client = ss.m_client;
-	}
-	CServerSocket() {
-		m_client = INVALID_SOCKET;
-		if (InitSockEnv() == FALSE)
-		{
-			MessageBox(NULL, _T("Unable to initialize the socket environment. Please check the network settings!"), _T("Initialization Error!"), MB_OK | MB_ICONERROR);
-			exit(0);
-		}
-		m_sock = socket(PF_INET, SOCK_STREAM, 0);
-	}
-	~CServerSocket()
-	{
-		closesocket(m_sock);
-		WSACleanup();
-	}
-	BOOL InitSockEnv()
-	{
-		WSADATA data;
-		// Request to use Socket version 1.1
-		if (WSAStartup(MAKEWORD(2, 0), &data) != 0)
-		{
-			//TODO: handle the return value
-			return  FALSE;
-		}
-		return TRUE;
-	}
+    enum class SessionState
+    {
+        Idle,
+        AwaitingCode,
+        WaitingForConsent,
+        Sharing,
+    };
 
-	static void releaseInstance()
-	{
-		// Defensive programming
-		if (m_instance != NULL)
-		{
-			CServerSocket* tmp = m_instance;
-			m_instance = NULL;
-			delete tmp;
-		}
-	}
-	// Static pointer note: m_instance is a static pointer.
-	// When the program exits, the operating system reclaims the 4 / 8 bytes used by the pointer variable itself, but it does not destroy the heap object pointed to by that pointer.
-	static CServerSocket* m_instance;
+    static unsigned __stdcall ThreadEntry(void* context);
+    unsigned Run();
+    void AcceptClient();
+    bool ReceiveFromClient();
+    void HandlePacket(const CPacket& packet);
+    bool RequestConsent();
+    void ResetClient();
+    void CloseSocket(SOCKET& socket);
+    bool SendPacket(SOCKET socket, const CPacket& packet);
+    bool SendStatus(ScreenShareProtocol::Status status);
+    CString CurrentSessionCode() const;
+    void PostEvent(HostServerEventType type, const CString& peerIp = CString(), const CString& detail = CString()) const;
 
-	class CHelper
-	{
-	public:
-		CHelper()
-		{
-			CServerSocket::getInstance();
-		}
-		~CHelper()
-		{
-			CServerSocket::releaseInstance();
-		}
-	};
-	static CHelper m_helper;
+    HWND m_ownerWnd;
+    HANDLE m_thread;
+    SOCKET m_listenSocket;
+    SOCKET m_clientSocket;
+    UINT m_port;
+    std::atomic_bool m_running;
+    SessionState m_sessionState;
+    UINT m_wrongAttempts;
+    std::atomic_bool m_endSessionRequested;
+    CString m_peerIp;
+    CString m_sessionCode;
+    std::vector<char> m_receiveBuffer;
+    mutable std::mutex m_stateMutex;
+    std::mutex m_sendMutex;
 };
-
-// Declare an external variable so other files can use it by including this header
-extern CServerSocket server;

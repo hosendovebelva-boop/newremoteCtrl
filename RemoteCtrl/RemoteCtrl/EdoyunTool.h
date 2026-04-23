@@ -1,144 +1,103 @@
 #pragma once
+
+#include <atlconv.h>
+#include <winsock2.h>
+#include <ws2tcpip.h>
+
+#include <random>
+#include <set>
+#include <string>
+#include <vector>
+
+#pragma comment(lib, "Ws2_32.lib")
+
 class CEdoyunTool
 {
 public:
-    static void Dump(BYTE* pData, size_t nSize)
+    static CString GenerateSessionCode()
     {
-        std::string strOut;
-        for (size_t i = 0;i < nSize;i++)
+        std::random_device seed;
+        std::mt19937 engine(seed());
+        std::uniform_int_distribution<int> distribution(0, 9);
+
+        CString code;
+        for (int index = 0; index < 6; ++index)
         {
-            char buf[8] = "";
-            if (i > 0 && (i % 16 == 0))
-                strOut += '/n';
-            snprintf(buf, sizeof(buf), "%02X", pData[i] & 0xFF);
-            strOut += buf;
+            code.AppendChar(static_cast<TCHAR>('0' + distribution(engine)));
         }
-        strOut += '\n';
-        OutputDebugStringA(strOut.c_str());
+
+        return code;
     }
-    static bool IsAdmin()
-	{
-		HANDLE hToken = NULL;
-		if (!OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hToken))
-		{
-			ShowError();
-			return false;
-		}
-		TOKEN_ELEVATION eve;
-		DWORD len = 0;
-		if (GetTokenInformation(hToken, TokenElevation, &eve, sizeof(eve), &len) == FALSE)
-		{
-			ShowError();
-			return false;
-		}
-		CloseHandle(hToken);
 
-		if (len == sizeof(eve))
-		{
-			return eve.TokenIsElevated;
-		}
-		printf("length of tokeninformation is %d\r\n", len);
-		return false;
-	}
+    static CString JoinLocalIpv4Addresses()
+    {
+        const std::vector<CString> addresses = GetLocalIpv4Addresses();
+        CString joined;
+        for (size_t index = 0; index < addresses.size(); ++index)
+        {
+            if (index > 0)
+            {
+                joined += _T(", ");
+            }
+            joined += addresses[index];
+        }
 
-	static void ShowError()
-	{
-		LPWSTR lpMessageBuf = NULL;
-		//strerror(errno); standard
-		FormatMessage(
-			FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER,
-			NULL, GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPWSTR)&lpMessageBuf, 0, NULL);
-		OutputDebugString(lpMessageBuf);
-		MessageBox(NULL, lpMessageBuf, _T("Error occurred"), 0);
+        return joined;
+    }
 
-		LocalFree(lpMessageBuf);
-	}
+private:
+    static std::vector<CString> GetLocalIpv4Addresses()
+    {
+        std::vector<CString> result;
+        char hostName[256] = {};
+        if (gethostname(hostName, sizeof(hostName)) != 0)
+        {
+            result.push_back(_T("127.0.0.1"));
+            return result;
+        }
 
-	static bool RunAsAdmin()
-	{
-		// In Local Security Policy, enable the Administrator account and disable the policy that restricts blank-password accounts to local console logon only
-		STARTUPINFO si = { 0 };
-		PROCESS_INFORMATION pi = { 0 };
-		TCHAR sPath[MAX_PATH] = _T("");
-		GetModuleFileName(NULL, sPath, MAX_PATH);
-		BOOL ret = CreateProcessWithLogonW(_T("Administrator"), NULL, NULL, LOGON_WITH_PROFILE, NULL, sPath, CREATE_UNICODE_ENVIRONMENT, NULL, NULL, &si, &pi);
-		if (!ret)
-		{
-			ShowError();	//TODO: remove debug information
-			MessageBox(NULL, sPath, _T("Program Error"), 0);	//TODO: remove debug information
-			return false;
-		}
-		WaitForSingleObject(pi.hProcess, INFINITE);
-		CloseHandle(pi.hProcess);
-		CloseHandle(pi.hThread);
-		return true;
-	}
+        addrinfo hints = {};
+        hints.ai_family = AF_INET;
+        hints.ai_socktype = SOCK_STREAM;
 
-	static BOOL WriteStartupDir(const CString& strPath)
-	{
-		// Implement startup by modifying the startup folder
-		TCHAR sPath[MAX_PATH] = _T("");
-		GetModuleFileName(NULL, sPath, MAX_PATH);
-		return CopyFile(sPath, strPath, FALSE);
-		
-	}
+        addrinfo* info = nullptr;
+        if (getaddrinfo(hostName, nullptr, &hints, &info) != 0)
+        {
+            result.push_back(_T("127.0.0.1"));
+            return result;
+        }
 
-	// At startup, the program runs with the same privileges as the startup user
-	// If the privilege levels do not match, the program may fail to start
-	// Startup also affects environment variables, so if the program depends on DLLs (dynamic libraries), startup may fail
-	// Solutions:
-	// [Copy those DLLs into system32 or sysWOW64]
-	// system32 usually contains 64-bit programs, while syswow64 usually contains 32-bit programs
-	// [Use static libraries instead of dynamic libraries]
-	static bool WriteRegisterTable(const CString& strPath)
-	{
-		// Implement startup by modifying the registry
-		CString strSubKey = _T("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run");
-		TCHAR sPath[MAX_PATH] = _T("");
-		GetModuleFileName(NULL, sPath, MAX_PATH);
-		BOOL ret = CopyFile(sPath, strPath, FALSE);
-		if (ret == FALSE)
-		{
-			MessageBox(NULL, _T("Failed to copy the file. Is this due to insufficient privileges?\r\n"), _T("Error"), MB_ICONERROR | MB_TOPMOST);
-			return false;
-		}
-		HKEY hKey = NULL;
-		ret = RegOpenKeyEx(HKEY_LOCAL_MACHINE, strSubKey, 0, KEY_ALL_ACCESS | KEY_WOW64_64KEY, &hKey);
-		if (ret != ERROR_SUCCESS)
-		{
-			RegCloseKey(hKey);
-			MessageBox(NULL, _T("Failed to configure startup at boot. Is this due to insufficient privileges?"), _T("Error"), MB_ICONERROR | MB_TOPMOST);
-			return false;
-		}
+        std::set<std::wstring> unique;
+        for (addrinfo* current = info; current != nullptr; current = current->ai_next)
+        {
+            const sockaddr_in* address = reinterpret_cast<const sockaddr_in*>(current->ai_addr);
+            char ipBuffer[INET_ADDRSTRLEN] = {};
+            if (inet_ntop(AF_INET, &address->sin_addr, ipBuffer, sizeof(ipBuffer)) == nullptr)
+            {
+                continue;
+            }
 
-		ret = RegSetValueEx(hKey, _T("RemoteCtrl"), 0, REG_EXPAND_SZ, (BYTE*)(LPCTSTR)strPath, strPath.GetLength() * sizeof(TCHAR));
-		if (ret != ERROR_SUCCESS)
-		{
-			RegCloseKey(hKey);
-			MessageBox(NULL, _T("Failed to configure startup at boot. Is this due to insufficient privileges?"), _T("Error"), MB_ICONERROR | MB_TOPMOST);
-			return false;
-		}
-		RegCloseKey(hKey);
-		return true;
-	}
+            CString ip(CA2T(ipBuffer));
+            if (ip == _T("127.0.0.1"))
+            {
+                continue;
+            }
 
-	static bool Init()
-	{
-		// Used to initialize MFC console applications (general-purpose)
-		HMODULE hModule = ::GetModuleHandle(nullptr);
-		if (hModule == nullptr)
-		{
-			wprintf(L"Error: GetModuleHandle failed\n");
-			return false;
-		}
-		if (!AfxWinInit(hModule, nullptr, ::GetCommandLine(), 0))
-		{
-			// TODO: Write code for the application behavior here.
-			wprintf(L"Error: MFC initialization failed\n");
-			return false;
-		}
-		return true;
-	}
+            unique.insert(std::wstring(ip.GetString()));
+        }
 
+        freeaddrinfo(info);
+
+        for (const std::wstring& address : unique)
+        {
+            result.push_back(address.c_str());
+        }
+
+        if (result.empty())
+        {
+            result.push_back(_T("127.0.0.1"));
+        }
+
+        return result;
+    }
 };
-
